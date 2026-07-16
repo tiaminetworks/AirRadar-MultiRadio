@@ -68,6 +68,12 @@ Connect the three B210s and verify that UHD sees them:
 uhd_find_devices
 ```
 
+The three AirRadar runtime containers wait for their pinned B210 serial before
+starting the C++ processor. If a B210 is missing, unstable, or unable to load
+firmware, the container stays up and logs `AirRadar USRP wait: ...` instead of
+crash-restarting. After USB/power/cable issues are fixed, the runtime starts
+automatically on the next wait cycle.
+
 Then pin the detected serials into the three AirRadar configs:
 
 ```bash

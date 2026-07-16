@@ -57,10 +57,11 @@ services:
       - ./config/sensors/sensor1:/airradar/config
       - ./save/sensor1:/airradar/save
       - ./replay/sensor1:/airradar/replay
+      - ./script/wait_for_usrp_and_run.bash:/usr/local/bin/airradar-wait-for-usrp:ro
       - /dev/shm:/dev/shm:rw
       - /dev/usb:/dev/usb:rw
       - /dev/bus/usb:/dev/bus/usb:rw
-    command: "/airradar/bin/airradar -c config/config.yml"
+    command: "/usr/local/bin/airradar-wait-for-usrp /airradar/bin/airradar -c config/config.yml"
 
   sensor1_api:
     <<: *airradar-api
@@ -90,10 +91,11 @@ services:
       - ./config/sensors/sensor2:/airradar/config
       - ./save/sensor2:/airradar/save
       - ./replay/sensor2:/airradar/replay
+      - ./script/wait_for_usrp_and_run.bash:/usr/local/bin/airradar-wait-for-usrp:ro
       - /dev/shm:/dev/shm:rw
       - /dev/usb:/dev/usb:rw
       - /dev/bus/usb:/dev/bus/usb:rw
-    command: "/airradar/bin/airradar -c config/config.yml"
+    command: "/usr/local/bin/airradar-wait-for-usrp /airradar/bin/airradar -c config/config.yml"
 
   sensor2_api:
     <<: *airradar-api
@@ -123,10 +125,11 @@ services:
       - ./config/sensors/sensor3:/airradar/config
       - ./save/sensor3:/airradar/save
       - ./replay/sensor3:/airradar/replay
+      - ./script/wait_for_usrp_and_run.bash:/usr/local/bin/airradar-wait-for-usrp:ro
       - /dev/shm:/dev/shm:rw
       - /dev/usb:/dev/usb:rw
       - /dev/bus/usb:/dev/bus/usb:rw
-    command: "/airradar/bin/airradar -c config/config.yml"
+    command: "/usr/local/bin/airradar-wait-for-usrp /airradar/bin/airradar -c config/config.yml"
 
   sensor3_api:
     <<: *airradar-api

@@ -90,6 +90,12 @@ If UHD cannot find the images, run:
 sudo uhd_images_downloader
 ```
 
+The sensor runtime containers include a hardware wait wrapper. If a configured
+B210 serial is not visible or UHD cannot initialize it, the container logs
+`AirRadar USRP wait: ...` and keeps waiting instead of crash-restarting. This
+makes USB/power/cable problems visible in the logs and lets the runtime start
+automatically after the hardware becomes healthy.
+
 ## 5. Pin B210 Serial Numbers
 
 Replace the serials below with the three serials from `uhd_find_devices`:
