@@ -1,0 +1,688 @@
+capture:
+  fs: 5000000
+  fc: 521000000
+  device:
+    type: Usrp
+    address: serial=CHANGE_ME_B210_SENSOR3
+    subdev: A:A A:B
+    antenna:
+    - RX2
+    - RX2
+    bandwidth: 5000000
+    gain:
+    - 20
+    - 20
+  replay:
+    state: false
+    loop: true
+    file: /airradar/replay/sensor3.rspduo
+display:
+  maxHoldSeconds: 30
+transmitters:
+  active: ktxl_rf22_atsc1
+  referenceModes:
+    kqca_rf23_atsc3: baseline
+    kspx_rf21_atsc1: baseline
+    ktxl_rf22_atsc1: baseline
+    kmax_rf24_atsc1: baseline
+    kovr_rf25_atsc1: baseline
+    ktfk_rf26_atsc1: baseline
+    kcra_rf35_atsc1: baseline
+    kuvs_rf18_atsc1: baseline
+  presets:
+    kqca_rf23_atsc3:
+      label: KQCA RF23 - ATSC 3.0
+      waveform: atsc3
+      fc: 527000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 7
+      suitability: ATSC 3.0 lighthouse from Walnut Grove; useful for R&D, but baseline mode is safer for live detection.
+      station:
+        callSign: KQCA
+        virtualChannel: '58'
+        rfChannel: 23
+        physicalChannel: '23'
+        facilityId: 10242
+        city: Stockton, CA
+        network: NextGen TV lighthouse
+        standard: ATSC 3.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=10242
+      power:
+        erpKw: 425
+        polarization: ND (H)
+      tx:
+        latitude: 38.265
+        longitude: -121.491111
+        altitude: 581
+        antennaHeight: 579
+        name: KQCA RF23 ATSC 3.0
+      reference:
+        enable: true
+        mode: atsc3
+        channelBandwidth: 6000000
+        pilotOffset: 0
+        pilotGuard: 0
+        whiteningEnable: false
+        pilotPreserve: false
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 11
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 65536
+        atsc3FftSize: 8192
+        atsc3GuardInterval: 192
+        atsc3SymbolSearch: 2048
+        atsc3ActiveCarriers: 6913
+        atsc3PilotSpacing: 12
+        atsc3PilotPattern: atsc3-combined
+        atsc3PilotDx: 3
+        atsc3PilotDy: 4
+        atsc3PilotEqualize: true
+        atsc3DataRemodEnable: false
+        atsc3HardDecision: false
+        atsc3EnableSvd: false
+        atsc3AutoDetectOfdm: true
+        atsc3DiagnosticsEnable: true
+        atsc3GuardrailEnable: true
+        atsc3MinCpScore: 0.02
+        atsc3MinRawCorrelation: 0.8
+        atsc3MinResidualImprovementDb: 0.0
+        atsc3ResidualDelayMin: -10
+        atsc3ResidualDelayMax: 80
+        atsc3ResidualStride: 64
+        atsc3FallbackHoldCpis: 30
+        atsc3SvdEnergy: 0.9
+        atsc3SvdMaxPilots: 256
+        logEvery: 25
+    kspx_rf21_atsc1:
+      label: KSPX RF21 - ATSC 1.0
+      waveform: atsc1
+      fc: 515000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 3
+      suitability: Strong high-power UHF ATSC 1.0 Walnut Grove candidate near the current antenna tuning range.
+      station:
+        callSign: KSPX-TV
+        virtualChannel: '29'
+        rfChannel: 21
+        physicalChannel: '21'
+        facilityId: 52953
+        city: Sacramento, CA
+        network: ION
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=52953
+      power:
+        erpKw: 1000
+        polarization: DA (E)
+      tx:
+        latitude: 38.247222
+        longitude: -121.501944
+        altitude: 447
+        antennaHeight: 445
+        name: KSPX RF21 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+    ktxl_rf22_atsc1:
+      label: KTXL RF22 - ATSC 1.0
+      waveform: atsc1
+      fc: 521000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 1
+      suitability: Known-good high-power UHF ATSC 1.0 Walnut Grove illuminator already used by this receiver.
+      station:
+        callSign: KTXL
+        virtualChannel: '40'
+        rfChannel: 22
+        physicalChannel: '22'
+        facilityId: 10205
+        city: Sacramento, CA
+        network: FOX
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=10205
+      power:
+        erpKw: 1000
+        polarization: DA (E)
+      tx:
+        latitude: 38.271667
+        longitude: -121.506111
+        altitude: 602
+        antennaHeight: 601
+        name: KTXL RF22 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+    kmax_rf24_atsc1:
+      label: KMAX RF24 - ATSC 1.0
+      waveform: atsc1
+      fc: 533000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 2
+      suitability: High-power UHF ATSC 1.0 Walnut Grove signal, close to KQCA and KOVR in frequency.
+      station:
+        callSign: KMAX-TV
+        virtualChannel: '31'
+        rfChannel: 24
+        physicalChannel: '24'
+        facilityId: 51499
+        city: Sacramento, CA
+        network: Independent
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=51499
+      power:
+        erpKw: 1000
+        polarization: ND (E)
+      tx:
+        latitude: 38.24
+        longitude: -121.501944
+        altitude: 593
+        antennaHeight: 591
+        name: KMAX RF24 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+    kovr_rf25_atsc1:
+      label: KOVR RF25 - ATSC 1.0
+      waveform: atsc1
+      fc: 539000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 1
+      suitability: Very strong 1000 kW ATSC 1.0 UHF candidate from Walnut Grove with excellent expected RX power.
+      station:
+        callSign: KOVR
+        virtualChannel: '13'
+        rfChannel: 25
+        physicalChannel: '25'
+        facilityId: 56550
+        city: Stockton, CA
+        network: CBS
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=56550
+      power:
+        erpKw: 1000
+        polarization: ND (E)
+      tx:
+        latitude: 38.24
+        longitude: -121.501944
+        altitude: 611
+        antennaHeight: 609
+        name: KOVR RF25 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+    ktfk_rf26_atsc1:
+      label: KTFK RF26 - ATSC 1.0
+      waveform: atsc1
+      fc: 545000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 4
+      suitability: Strong 850 kW UHF ATSC 1.0 Walnut Grove candidate; useful alternate near KOVR/KMAX.
+      station:
+        callSign: KTFK-DT
+        virtualChannel: '64'
+        rfChannel: 26
+        physicalChannel: '26'
+        facilityId: 20871
+        city: Stockton, CA
+        network: UniMas
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=20871
+      power:
+        erpKw: 850
+        polarization: DA (E)
+      tx:
+        latitude: 38.24
+        longitude: -121.501944
+        altitude: 597
+        antennaHeight: 595
+        name: KTFK RF26 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+    kcra_rf35_atsc1:
+      label: KCRA RF35 - ATSC 1.0
+      waveform: atsc1
+      fc: 599000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 5
+      suitability: High-power ATSC 1.0 UHF candidate, but retune the reference monopole shorter for 599 MHz.
+      station:
+        callSign: KCRA-TV
+        virtualChannel: '3'
+        rfChannel: 35
+        physicalChannel: '35'
+        facilityId: 33875
+        city: Sacramento, CA
+        network: NBC
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=33875
+      power:
+        erpKw: 1000
+        polarization: ND (H)
+      tx:
+        latitude: 38.265
+        longitude: -121.491111
+        altitude: 581
+        antennaHeight: 581
+        name: KCRA RF35 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+    kuvs_rf18_atsc1:
+      label: KUVS RF18 - ATSC 1.0
+      waveform: atsc1
+      fc: 497000000
+      fs: 6000000
+      bandwidth: 6000000
+      rank: 6
+      suitability: Different southeast geometry from Angels Camp; useful experiment but likely weaker at the current receiver.
+      station:
+        callSign: KUVS-DT
+        virtualChannel: '19'
+        rfChannel: 18
+        physicalChannel: '18'
+        facilityId: 58609
+        city: Modesto, CA
+        network: Univision
+        standard: ATSC 1.0
+        band: UHF TV
+        source: RabbitEars
+        sourceUrl: https://www.rabbitears.info/market.php?request=print_station&facility_id=58609
+      power:
+        erpKw: 500
+        polarization: DA (E)
+      tx:
+        latitude: 38.118611
+        longitude: -120.725278
+        altitude: 911
+        antennaHeight: 73
+        name: KUVS RF18 ATSC 1.0
+      reference:
+        enable: true
+        mode: atsc1
+        channelBandwidth: 6000000
+        pilotOffset: -2690000
+        pilotGuard: 20000
+        whiteningEnable: true
+        pilotPreserve: true
+        normalizeRms: true
+        blend: 0.7
+        smoothingBins: 9
+        maxGainDb: 12.0
+        maxAttenuationDb: 12.0
+        blockSamples: 8192
+        logEvery: 25
+process:
+  data:
+    cpi: 0.64
+    buffer: 3
+    overlap: 0
+  reference:
+    enable: false
+    mode: baseline
+    channelBandwidth: 6000000
+    pilotOffset: -2690000
+    pilotGuard: 20000
+    whiteningEnable: true
+    pilotPreserve: true
+    normalizeRms: true
+    blend: 0.7
+    smoothingBins: 9
+    maxGainDb: 12
+    maxAttenuationDb: 12
+    blockSamples: 8192
+    atsc3FftSize: 8192
+    atsc3GuardInterval: 192
+    atsc3SymbolSearch: 2048
+    atsc3ActiveCarriers: 6913
+    atsc3PilotSpacing: 12
+    atsc3PilotPattern: atsc3-combined
+    atsc3PilotDx: 3
+    atsc3PilotDy: 4
+    atsc3PilotEqualize: true
+    atsc3DataRemodEnable: false
+    atsc3HardDecision: false
+    atsc3EnableSvd: false
+    atsc3AutoDetectOfdm: true
+    atsc3DiagnosticsEnable: true
+    atsc3GuardrailEnable: true
+    atsc3MinCpScore: 0.02
+    atsc3MinRawCorrelation: 0.8
+    atsc3MinResidualImprovementDb: 0
+    atsc3ResidualDelayMin: -10
+    atsc3ResidualDelayMax: 80
+    atsc3ResidualStride: 64
+    atsc3FallbackHoldCpis: 30
+    atsc3SvdEnergy: 0.9
+    atsc3SvdMaxPilots: 256
+    logEvery: 25
+  ambiguity:
+    delayMin: -10
+    delayMax: 300
+    dopplerMin: -300
+    dopplerMax: 300
+  clutter:
+    enable: true
+    method: wiener-hopf
+    signalCancelEnable: true
+    mapCancelEnable: false
+    delayMin: -10
+    delayMax: 300
+    dopplerMin: -3
+    dopplerMax: 3
+    dopplerStep: 3
+    blockSamples: 8192
+    regularization: 0.001
+    trainingStride: 16
+    lowDopplerAllDelay: true
+    lowDopplerAllDelayHz: 5
+    closeRegionCancel: false
+    closeDelayMin: 0
+    closeDelayMax: 28
+    closeDopplerMin: -17
+    closeDopplerMax: 17
+    mapCancelCapMarginDb: 3
+  detection:
+    enable: true
+    method: ca-cfar-1d
+    pfa: 3.0e-05
+    nGuard: 2
+    nTrain: 6
+    minDelay: 13
+    minDoppler: 10
+    candidateMinDoppler: 5
+    minSnr: 5.5
+    localMax: true
+    maskZeroDoppler: false
+    zeroDopplerHz: 8
+    maskCloseRange: false
+    closeRangeDelayMax: 100
+    closeRangeDopplerHz: 120
+    osRank: 0.75
+    nCentroid: 6
+    adaptiveClutterEnable: true
+    adaptiveClutterDelayBins: 10
+    adaptiveClutterDopplerHz: 20
+    adaptiveClutterThreshold: 8
+    adaptiveClutterDecay: 0.92
+    adaptiveClutterSnrMargin: 5
+    adaptiveClutterPenaltyDb: 0.6
+    adaptiveClutterMaxPenaltyDb: 8
+  candidatePromotion:
+    enable: true
+    minSnrDb: 5.8
+    seedSnrDb: 6.3
+    minHits: 7
+    minScore: 11
+    maxMissed: 8
+    gateDelayBins: 10
+    gateDopplerHz: 80
+    scoreDecay: 0.9
+    minMotionScore: 0.1
+    maxPromotedPerCpi: 1
+    allowLowDoppler: false
+  temporal:
+    enable: true
+    weakSnrDb: 5.5
+    strongSnrDb: 9
+    minHits: 3
+    minScore: 4
+    maxMissed: 8
+    gateDelayBins: 12
+    gateDopplerHz: 95
+    scoreDecay: 0.9
+    snrScaleDb: 8
+    minMotionScore: 0.08
+  tracker:
+    enable: true
+    initiate:
+      M: 3
+      N: 5
+      maxAcc: 180
+    gateDelayBins: 10
+    gateDopplerHz: 120
+    inputMinSnr: 5.8
+    minInitiationSnr: 5.5
+    minConfirmHits: 8
+    minConfirmQuality: 55
+    tentativeDelete: 3
+    confirmedDelete: 12
+    motionConfirmEnable: true
+    motionConfirmEarlyScore: 0.2
+    motionConfirmMatureScore: 0.1
+    delete: 6
+    smooth: none
+network:
+  ip: 0.0.0.0
+  ports:
+    api: 3300
+    map: 3301
+    detection: 3302
+    candidates: 3304
+    track: 3303
+    timestamp: 4300
+    timing: 4301
+    iqdata: 4302
+    config: 4303
+    control: 4304
+truth:
+  adsb:
+    enabled: true
+    tar1090: 172.17.0.1:8080
+    adsb2dd: 127.0.0.1:49155
+    metadataDb: auto
+  ais:
+    enabled: false
+    ip: 0.0.0.0
+    port: 30001
+evaluation:
+  enabled: true
+  saveTruth: true
+  truthIntervalMs: 1000
+  activeSessionMaxAgeSec: 30
+  profile: tracker
+  sensingRegion:
+    enable: true
+    enableRxRadius: true
+    rxRadiusKm: 30.0
+    enableSurveillanceAzimuth: true
+    surveillanceAzimuthDeg: 105
+    surveillanceAzimuthHalfWidthDeg: 45
+    enableElevation: true
+    minElevationDeg: -5
+    maxElevationDeg: 45
+    enableMaxAltitude: true
+    maxAltitudeFt: 8000
+    requireLatLon: true
+    requireAltitude: false
+    minDwellSec: 5
+    minDwellPoints: 3
+  diagnostics:
+    timeGateMs: 2500
+    delayGateKm: 1.5
+    dopplerGateHz: 50
+    visibleSnrDb: 4
+  profiles:
+    optimized:
+      label: High-recall candidate objects
+      candidateMode: candidate-object
+      timeGateSec: 15.0
+      delayGateKm: 8.0
+      dopplerGateHz: 600
+      adsbMaxAgeSec: 15
+      regionMode: observable
+      radiusKm: max
+      excludeZeroDoppler: true
+      zeroDopplerHz: 5
+      excludeCloseDsi: true
+      closeDelayKm: 2.0
+      closeDopplerHz: 80
+      includeCellMetrics: false
+      cellDelayKm: 0.25
+      cellDopplerHz: 5
+      minObjectHits: 3
+      minObjectCoverage: 0.03
+      maxObjectGapSec: 18.0
+      truthMergeGapSec: 180.0
+      minScoredTruthObjects: 5
+      minRadarObjectPoints: 5
+      temporalObjectMinSnrDb: 5.5
+      temporalObjectGateDelayKm: 3.0
+      temporalObjectGateDopplerHz: 200
+      temporalObjectMaxGapSec: 18.0
+      temporalObjectMinPoints: 8
+      temporalObjectMinDurationSec: 1.0
+      candidateObjectMaxPeaksPerFrame: 80
+      candidateObjectSeedMinSnrDb: 5.8
+      candidateObjectDedupeDelayKm: 0.25
+      candidateObjectDedupeDopplerHz: 10
+      duplicateFragmentMinHits: 3
+      duplicateFragmentDelayGateKm: 8.0
+      duplicateFragmentDopplerGateHz: 900
+      duplicateFragmentMinRadarCoverage: 0.02
+      backgroundMatchMinHits: 1
+      backgroundMatchDelayGateKm: 50.0
+      backgroundMatchDopplerGateHz: 3000
+      backgroundMatchMinRadarCoverage: 0
+      treatTruthlessRadarAsUnknown: true
+      treatLowSupportRadarAsUnknown: true
+      ignoreWeakUnmatchedCandidateObjects: true
+      unmatchedCandidateMaxMedianSnrDb: 9.0
+      unmatchedCandidateMaxPoints: 20
+      unmatchedCandidateMaxDurationSec: 20.0
+      requireHeatmapEvidence: false
+      heatmapEvidenceMinSnrDb: 4.0
+      heatmapEvidenceMinHits: 2
+      heatmapEvidenceMinCoverage: 0.08
+      heatmapEvidenceTimePadSec: 2.5
+      trackMergeGapSec: 18.0
+      trackMergeDelayGateKm: 4.0
+      trackMergeDopplerGateHz: 120
+location:
+  rx:
+    latitude: 38.58000207566816
+    longitude: -121.49606043119596
+    altitude: 50
+    name: Multi-radio 3 RX
+  tx:
+    latitude: 38.271667
+    longitude: -121.506111
+    altitude: 602
+    antennaHeight: 601
+    name: KTXL RF22 ATSC 1.0
+save:
+  iq: false
+  map: false
+  rawDetection: true
+  detection: true
+  track: true
+  diagnostics: true
+  diagnosticTopPeaks: 40
+  heatmapEvidence: true
+  heatmapEvidenceIntervalCpis: 2
+  heatmapEvidenceTopPeaks: 200
+  heatmapEvidenceDelayStride: 4
+  heatmapEvidenceDopplerStride: 4
+  maxHoldEvidence: true
+  maxHoldEvidenceWindowCpis: 16
+  maxHoldEvidenceIntervalCpis: 4
+  timing: false
+  path: /airradar/save/
+  sessionSplit:
+    enable: true
+    intervalSec: 3600
+    alignToClockHour: true

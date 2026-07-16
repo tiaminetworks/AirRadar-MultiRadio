@@ -1,0 +1,260 @@
+networks:
+  airradar_multiradio:
+    name: airradar-multiradio
+
+x-airradar-runtime: &airradar-runtime
+  restart: unless-stopped
+  build:
+    context: ${AIRRADAR_SOURCE:-./src/airradar}
+  image: airradar-multiradio-airradar:latest
+  tty: true
+  network_mode: host
+  privileged: true
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
+  volumes:
+    - /dev/shm:/dev/shm:rw
+    - /dev/usb:/dev/usb:rw
+    - /dev/bus/usb:/dev/bus/usb:rw
+  profiles:
+    - airradar
+
+x-airradar-api: &airradar-api
+  restart: unless-stopped
+  build:
+    context: ${AIRRADAR_SOURCE:-./src/airradar}/api
+  image: airradar-multiradio-airradar-api:latest
+  network_mode: host
+  ulimits:
+    nofile:
+      soft: 65536
+      hard: 65536
+  profiles:
+    - airradar
+
+x-airradar-web: &airradar-web
+  restart: unless-stopped
+  image: httpd:2.4
+  command: >
+    /bin/sh -c "sed -i 's/^#LoadModule headers_module/LoadModule headers_module/' /usr/local/apache2/conf/httpd.conf &&
+    (grep -q 'conf/extra/httpd-no-cache.conf' /usr/local/apache2/conf/httpd.conf ||
+    printf '\nInclude conf/extra/httpd-no-cache.conf\n' >> /usr/local/apache2/conf/httpd.conf) &&
+    httpd-foreground"
+  networks:
+    - airradar_multiradio
+  profiles:
+    - airradar
+
+services:
+  sensor1:
+    <<: *airradar-runtime
+    container_name: airradar-mr-sensor1
+    depends_on:
+      - sensor1_api
+    volumes:
+      - ./config/sensors/sensor1:/airradar/config
+      - ./save/sensor1:/airradar/save
+      - ./replay/sensor1:/airradar/replay
+      - /dev/shm:/dev/shm:rw
+      - /dev/usb:/dev/usb:rw
+      - /dev/bus/usb:/dev/bus/usb:rw
+    command: "/airradar/bin/airradar -c config/config.yml"
+
+  sensor1_api:
+    <<: *airradar-api
+    container_name: airradar-mr-sensor1-api
+    volumes:
+      - ./config/sensors/sensor1:/usr/src/app/config
+      - ./save/sensor1:/usr/src/app/save
+    environment:
+      AIRRADAR_LOG_FILE: /usr/src/app/save/airradar.log
+    command: "node server.js /usr/src/app/config/config.yml"
+
+  sensor1_web:
+    <<: *airradar-web
+    container_name: airradar-mr-sensor1-web
+    ports:
+      - "${SENSOR1_WEB_PORT:-49161}:80"
+    volumes:
+      - ./build/web/sensor1:/usr/local/apache2/htdocs:ro
+      - ./script/httpd-no-cache.conf:/usr/local/apache2/conf/extra/httpd-no-cache.conf:ro
+
+  sensor2:
+    <<: *airradar-runtime
+    container_name: airradar-mr-sensor2
+    depends_on:
+      - sensor2_api
+    volumes:
+      - ./config/sensors/sensor2:/airradar/config
+      - ./save/sensor2:/airradar/save
+      - ./replay/sensor2:/airradar/replay
+      - /dev/shm:/dev/shm:rw
+      - /dev/usb:/dev/usb:rw
+      - /dev/bus/usb:/dev/bus/usb:rw
+    command: "/airradar/bin/airradar -c config/config.yml"
+
+  sensor2_api:
+    <<: *airradar-api
+    container_name: airradar-mr-sensor2-api
+    volumes:
+      - ./config/sensors/sensor2:/usr/src/app/config
+      - ./save/sensor2:/usr/src/app/save
+    environment:
+      AIRRADAR_LOG_FILE: /usr/src/app/save/airradar.log
+    command: "node server.js /usr/src/app/config/config.yml"
+
+  sensor2_web:
+    <<: *airradar-web
+    container_name: airradar-mr-sensor2-web
+    ports:
+      - "${SENSOR2_WEB_PORT:-49162}:80"
+    volumes:
+      - ./build/web/sensor2:/usr/local/apache2/htdocs:ro
+      - ./script/httpd-no-cache.conf:/usr/local/apache2/conf/extra/httpd-no-cache.conf:ro
+
+  sensor3:
+    <<: *airradar-runtime
+    container_name: airradar-mr-sensor3
+    depends_on:
+      - sensor3_api
+    volumes:
+      - ./config/sensors/sensor3:/airradar/config
+      - ./save/sensor3:/airradar/save
+      - ./replay/sensor3:/airradar/replay
+      - /dev/shm:/dev/shm:rw
+      - /dev/usb:/dev/usb:rw
+      - /dev/bus/usb:/dev/bus/usb:rw
+    command: "/airradar/bin/airradar -c config/config.yml"
+
+  sensor3_api:
+    <<: *airradar-api
+    container_name: airradar-mr-sensor3-api
+    volumes:
+      - ./config/sensors/sensor3:/usr/src/app/config
+      - ./save/sensor3:/usr/src/app/save
+    environment:
+      AIRRADAR_LOG_FILE: /usr/src/app/save/airradar.log
+    command: "node server.js /usr/src/app/config/config.yml"
+
+  sensor3_web:
+    <<: *airradar-web
+    container_name: airradar-mr-sensor3-web
+    ports:
+      - "${SENSOR3_WEB_PORT:-49163}:80"
+    volumes:
+      - ./build/web/sensor3:/usr/local/apache2/htdocs:ro
+      - ./script/httpd-no-cache.conf:/usr/local/apache2/conf/extra/httpd-no-cache.conf:ro
+
+  localization_api:
+    restart: unless-stopped
+    build:
+      context: ${LOCALIZATION_SOURCE:-./src/airradar-localization}
+      dockerfile: ./api/Dockerfile
+    image: airradar-multiradio-localization-api:latest
+    container_name: airradar-mr-localization-api
+    ports:
+      - "${LOCALIZATION_PORT:-49256}:5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - airradar_multiradio
+    volumes:
+      - ./config/localization:/app/config
+      - ${LOCALIZATION_SOURCE:-./src/airradar-localization}/common:/app/common
+      - ./data:/app/data
+      - ./archive:/app/archive:ro
+      - ./save/localization:/app/save:ro
+    environment:
+      AIRRADAR_LOCALIZATION_VERSION: ${AIRRADAR_LOCALIZATION_VERSION:-multiradio}
+    profiles:
+      - localization
+
+  localization_event:
+    restart: unless-stopped
+    build:
+      context: ${LOCALIZATION_SOURCE:-./src/airradar-localization}/event
+      dockerfile: Dockerfile
+    image: airradar-multiradio-localization-event:latest
+    container_name: airradar-mr-localization-event
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - airradar_multiradio
+    volumes:
+      - ./config/localization:/app/config
+      - ${LOCALIZATION_SOURCE:-./src/airradar-localization}/common:/app/common
+      - ${LOCALIZATION_SOURCE:-./src/airradar-localization}/test:/app/test
+      - ./save/localization:/app/save
+      - ./archive:/app/archive:ro
+    environment:
+      AIRRADAR_LOCALIZATION_VERSION: ${AIRRADAR_LOCALIZATION_VERSION:-multiradio}
+    profiles:
+      - localization
+
+  localization_cesium:
+    restart: unless-stopped
+    build:
+      context: ${LOCALIZATION_SOURCE:-./src/airradar-localization}/cesium
+      dockerfile: Dockerfile
+    image: airradar-multiradio-localization-cesium:latest
+    container_name: airradar-mr-localization-cesium
+    networks:
+      - airradar_multiradio
+    profiles:
+      - localization
+
+  readsb:
+    image: ghcr.io/sdr-enthusiasts/docker-readsb-protobuf:latest
+    container_name: airradar-mr-readsb
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      TZ: ${TZ:-America/Los_Angeles}
+      READSB_DEVICE_TYPE: rtlsdr
+      READSB_GAIN: autogain
+      READSB_MODEAC: "true"
+      READSB_NET_ENABLE: "true"
+      READSB_RX_LOCATION_ACCURACY: "2"
+    networks:
+      - airradar_multiradio
+    profiles:
+      - adsb
+
+  tar1090:
+    image: ghcr.io/sdr-enthusiasts/docker-tar1090:latest
+    container_name: airradar-mr-tar1090
+    restart: unless-stopped
+    depends_on:
+      - readsb
+    environment:
+      TZ: ${TZ:-America/Los_Angeles}
+      BEASTHOST: readsb
+      MLATSERVER: readsb
+      TAR1090_DEFAULTCENTERLAT: "38.58"
+      TAR1090_DEFAULTCENTERLON: "-121.50"
+      TAR1090_MESSAGERATEINTITLE: "true"
+    ports:
+      - "${TAR1090_PORT:-8080}:80"
+    networks:
+      - airradar_multiradio
+    profiles:
+      - adsb
+
+  adsb2dd:
+    restart: unless-stopped
+    build:
+      context: ${ADSB2DD_SOURCE:-./src/adsb2dd}
+    image: airradar-multiradio-adsb2dd:latest
+    container_name: airradar-mr-adsb2dd
+    ports:
+      - "${ADSB2DD_PORT:-49155}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - airradar_multiradio
+    profiles:
+      - adsb

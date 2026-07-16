@@ -1,0 +1,174 @@
+radar:
+- name: sensor1
+  url: host.docker.internal:3100
+  localizationDefault: true
+  fusionWeight: 1.0
+  location:
+    rx:
+      latitude: 38.58000207566816
+      longitude: -121.49606043119596
+      altitude: 50
+      name: Multi-radio 1 RX
+    tx:
+      latitude: 38.271667
+      longitude: -121.506111
+      altitude: 602
+      antennaHeight: 601
+      name: KTXL RF22 ATSC 1.0
+- name: sensor2
+  url: host.docker.internal:3200
+  localizationDefault: true
+  fusionWeight: 1.0
+  location:
+    rx:
+      latitude: 38.58000207566816
+      longitude: -121.49606043119596
+      altitude: 50
+      name: Multi-radio 2 RX
+    tx:
+      latitude: 38.271667
+      longitude: -121.506111
+      altitude: 602
+      antennaHeight: 601
+      name: KTXL RF22 ATSC 1.0
+- name: sensor3
+  url: host.docker.internal:3300
+  localizationDefault: true
+  fusionWeight: 1.0
+  location:
+    rx:
+      latitude: 38.58000207566816
+      longitude: -121.49606043119596
+      altitude: 50
+      name: Multi-radio 3 RX
+    tx:
+      latitude: 38.271667
+      longitude: -121.506111
+      altitude: 602
+      antennaHeight: 601
+      name: KTXL RF22 ATSC 1.0
+associate:
+  default: automatic
+  adsb:
+    tDelete: 5
+    delayWindowKm: 2.5
+    dopplerWindowHz: 100
+    associationHoldSeconds: 5
+    evidence:
+      useDetections: true
+      useTracker: true
+      trackerMaxCoasts: 10
+      trackerMinQuality: 0
+    matchedLocalization:
+      enable: true
+      minSensors: 1
+      maxTargets: 20
+  radarPair:
+    maxCandidatesPerRadar: 2
+    maxPairs: 8
+    minSnr: 5.5
+    preferTracker: true
+    minTrackQuality: 45
+    minTrackHits: 3
+    maxTrackCoasts: 40
+    trackQualityWeight: 0.08
+    trackHitsWeight: 0.04
+    trackCoastPenalty: 0.08
+    softQualityGates: true
+    softQualityReasons:
+    - trackCoasts
+    softQualityPenalty: 18.0
+    tupleHistoryEnable: true
+    preferStableTuples: true
+    tupleHistoryWeight: 8.0
+    tupleAgeWeight: 1.5
+    tupleTtlSec: 45
+    requireStableTuples: false
+    minTupleHits: 3
+    minTupleAgeSec: 1.0
+    seededCandidateReserve: true
+    maxSeededCandidatesPerRadar: 4
+localisation:
+  default: joint-delay-doppler
+  quorum:
+    default: auto
+  joint:
+    delaySigmaKm: 0.35
+    dopplerSigmaHz: 35
+    maxDelayRmsKm: 1.25
+    maxDopplerRmsHz: 180
+    defaultAltitudeM: 1200
+    maxRangeKm: 45
+    positionStartGridSize: 17
+    maxPositionStarts: 3
+    maxPairPositionStarts: 2
+    maxSolutions: 12
+    solutionNmsKm: 2.0
+    preTrackNonOverlap: true
+    maxTrackHypotheses: 12
+    trackGateKm: 5
+    trackGateVelocityMps: 120
+    trackDeleteSeconds: 15
+    minInitiationSensors: 3
+    allowLowSensorUpdates: true
+    confirmHitsTwoSensors: 3
+    confirmHitsThreeSensors: 2
+    confirmMinAgeSecTwoSensors: 2.5
+    confirmMinAgeSecThreeSensors: 1.5
+    publishTentative: false
+    minTxBearingSpreadDeg: 20
+    minWeightSumTwoSensors: 2.0
+    maxCep95M: 6000
+    pairConsistencyEnable: false
+    pairConsistencyMinPairs: 1
+    pairConsistencyMaxPairDistanceKm: 0.0
+    pairConsistencyMaxFailures: 99
+    pairConsistencyScorePenalty: 0.0
+    requireSourceTrackConsistency: true
+    minSourceTrackConsistency: 0.6
+    minConsistentSourceSensors: 2
+    minDominantSourceTrackHits: 2
+    requireStableSourceTuple: false
+    minStableTupleConsistency: 0.65
+    minStableTupleHitsTwoSensors: 5
+    minStableTupleHitsThreeSensors: 3
+    minStableTupleAgeSecTwoSensors: 4.0
+    minStableTupleAgeSecThreeSensors: 2.0
+    minSourceTupleOverlapSensors: 0
+    sensorWeights:
+      sensor1: 1.0
+      sensor2: 1.0
+      sensor3: 1.0
+  ellipse:
+    nSamples: 100
+    threshold: 500
+    nDisplay: 50
+  ellipsoid:
+    nSamples: 60
+    threshold: 500
+    nDisplay: 50
+map:
+  location:
+    latitude: 38.58000207566816
+    longitude: -121.49606043119596
+  center_width: 80000
+  center_height: 80000
+  tile_server:
+    osm: tile.openstreetmap.org/
+  tar1090: host.docker.internal:8080
+  tar1090_servers:
+  - name: local tar1090
+    url: host.docker.internal:8080
+airradar:
+  save: true
+  savePath: /app/save
+  evidenceSave: true
+  evidencePath: /app/save/evidence
+  evidenceMaxPerRadar: 80
+  sessionSplit:
+    enable: true
+    intervalSec: 3600
+    alignToClockHour: true
+  tDelete: 60
+  requestTimeoutSec: 3
+  archiveRoot: /app/archive
