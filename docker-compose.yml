@@ -201,7 +201,9 @@ services:
     image: airradar-multiradio-localization-cesium:latest
     container_name: airradar-mr-localization-cesium
     networks:
-      - airradar_multiradio
+      airradar_multiradio:
+        aliases:
+          - cesium-apache
     profiles:
       - localization
 

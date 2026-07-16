@@ -14,6 +14,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SENSOR_KEYS = ["sensor1", "sensor2", "sensor3"]
+DEFAULT_HOST_GATEWAY = "172.17.0.1"
 
 
 def detect_serials() -> list[str]:
@@ -81,7 +82,7 @@ def update_localization_config(serials: list[str], args: argparse.Namespace) -> 
         data["radar"].append(
             {
                 "name": sensor,
-                "url": f"host.docker.internal:{api_port}",
+                "url": f"{args.host_gateway}:{api_port}",
                 "localizationDefault": True,
                 "fusionWeight": 1.0,
                 "location": {
@@ -106,9 +107,9 @@ def update_localization_config(serials: list[str], args: argparse.Namespace) -> 
     }
     data.setdefault("map", {}).setdefault("location", {})["latitude"] = args.rx_lat
     data["map"]["location"]["longitude"] = args.rx_lon
-    data["map"]["tar1090"] = "host.docker.internal:8080"
+    data["map"]["tar1090"] = f"{args.host_gateway}:8080"
     data["map"]["tar1090_servers"] = [
-        {"name": "local tar1090", "url": "host.docker.internal:8080"}
+        {"name": "local tar1090", "url": f"{args.host_gateway}:8080"}
     ]
     save_yaml(path, data)
 
@@ -128,6 +129,14 @@ def main() -> int:
     parser.add_argument("--tx-lon", type=float, default=-121.506111)
     parser.add_argument("--tx-alt", type=float, default=602)
     parser.add_argument("--tx-ant", type=float, default=601)
+    parser.add_argument(
+        "--host-gateway",
+        default=DEFAULT_HOST_GATEWAY,
+        help=(
+            "Host address reachable from both Docker containers and the host browser. "
+            "Ubuntu Docker bridge default is 172.17.0.1."
+        ),
+    )
     args = parser.parse_args()
 
     serials = [s.strip() for s in args.serials.split(",")] if args.serials else detect_serials()

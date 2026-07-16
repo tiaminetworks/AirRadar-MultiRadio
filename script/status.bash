@@ -18,3 +18,6 @@ done
 
 printf 'Localization API: '
 curl -fsS "http://127.0.0.1:${LOCALIZATION_PORT:-49256}/api/status" >/dev/null 2>&1 && echo "ok" || echo "not ready"
+
+printf 'Localization map Cesium assets: '
+curl -fsS "http://127.0.0.1:${LOCALIZATION_PORT:-49256}/cesium/Build/Cesium/Cesium.js" >/dev/null 2>&1 && echo "ok" || echo "not ready"

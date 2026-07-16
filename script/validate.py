@@ -21,6 +21,11 @@ def load_yaml(path: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--allow-placeholders", action="store_true")
+    parser.add_argument(
+        "--host-gateway",
+        default="172.17.0.1",
+        help="Host address used by localization for browser/container reachable sensor APIs.",
+    )
     args = parser.parse_args()
 
     errors: list[str] = []
@@ -52,7 +57,7 @@ def main() -> int:
     loc = load_yaml(ROOT / "config" / "localization" / "config.yml")
     loc_radars = {entry["name"]: entry["url"] for entry in loc.get("radar", [])}
     for sensor, port in zip(SENSOR_KEYS, [3100, 3200, 3300]):
-        expected = f"host.docker.internal:{port}"
+        expected = f"{args.host_gateway}:{port}"
         if loc_radars.get(sensor) != expected:
             errors.append(f"localization: {sensor} url should be {expected}")
 

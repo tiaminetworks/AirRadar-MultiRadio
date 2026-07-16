@@ -23,7 +23,13 @@ Reference antenna 3      Surveillance antenna 3
 RTL-SDR 1090 MHz receiver --> readsb --> tar1090 :8080 --> adsb2dd :49155
 
 sensor1/sensor2/sensor3 APIs + ADS-B truth --> AirRadar Localization :49256
+AirRadar Localization :49256 -- /cesium/* proxy --> Cesium Apache container
 ```
+
+The localization API serves `/map/index.html` and proxies `/cesium/*` requests
+to the Cesium container using the network alias `cesium-apache`. If that alias
+is missing, the browser can load AirRadar overlay controls but cannot initialize
+the Cesium map.
 
 ## Port Map
 

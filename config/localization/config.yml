@@ -1,6 +1,6 @@
 radar:
 - name: sensor1
-  url: host.docker.internal:3100
+  url: 172.17.0.1:3100
   localizationDefault: true
   fusionWeight: 1.0
   location:
@@ -16,7 +16,7 @@ radar:
       antennaHeight: 601
       name: KTXL RF22 ATSC 1.0
 - name: sensor2
-  url: host.docker.internal:3200
+  url: 172.17.0.1:3200
   localizationDefault: true
   fusionWeight: 1.0
   location:
@@ -32,7 +32,7 @@ radar:
       antennaHeight: 601
       name: KTXL RF22 ATSC 1.0
 - name: sensor3
-  url: host.docker.internal:3300
+  url: 172.17.0.1:3300
   localizationDefault: true
   fusionWeight: 1.0
   location:
@@ -155,10 +155,10 @@ map:
   center_height: 80000
   tile_server:
     osm: tile.openstreetmap.org/
-  tar1090: host.docker.internal:8080
+  tar1090: 172.17.0.1:8080
   tar1090_servers:
   - name: local tar1090
-    url: host.docker.internal:8080
+    url: 172.17.0.1:8080
 airradar:
   save: true
   savePath: /app/save

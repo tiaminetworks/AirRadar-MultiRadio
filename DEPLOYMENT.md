@@ -111,6 +111,16 @@ script/configure_b210s.py \
   --center-hz 521000000 --rate-hz 5000000 --bandwidth-hz 5000000
 ```
 
+The localization map URLs must be reachable from both Docker containers and the
+host browser. On a normal Ubuntu Docker bridge, keep the default host gateway
+`172.17.0.1`. If your bridge gateway is different, pass it explicitly:
+
+```bash
+script/configure_b210s.py \
+  --serials SERIAL1,SERIAL2,SERIAL3 \
+  --host-gateway 172.17.0.1
+```
+
 This updates:
 
 - `config/sensors/sensor1/config.yml`
@@ -188,6 +198,25 @@ Check localization:
 
 ```bash
 curl -s http://127.0.0.1:49256/api/status | python3 -m json.tool
+```
+
+Check the localization map Cesium assets:
+
+```bash
+curl -I http://127.0.0.1:49256/cesium/Build/Cesium/Cesium.js
+```
+
+Expected result: `HTTP/1.1 200`. If `/api/status` works but the map page is
+blank white with only AirRadar layer controls visible, the Cesium asset proxy is
+not reachable. Pull the current AirRadar Multi-radio code, rebuild, and recreate
+the localization services:
+
+```bash
+cd /opt/airradar-multiradio
+git pull --ff-only origin main
+script/build.bash
+script/up.bash
+script/status.bash
 ```
 
 ## 10. Updating Existing Multi-radio Deployments

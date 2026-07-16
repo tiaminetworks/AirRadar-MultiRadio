@@ -86,6 +86,16 @@ script/configure_b210s.py \
   --center-hz 521000000 --rate-hz 5000000 --bandwidth-hz 5000000
 ```
 
+On Ubuntu Docker bridge deployments, the localization browser and containers
+must be able to reach the same AirRadar API and tar1090 addresses. The default
+`configure_b210s.py` value is `172.17.0.1`, which works for the host Firefox
+browser and for the localization container. Override it only if your Docker
+bridge gateway is different:
+
+```bash
+script/configure_b210s.py --serials SERIAL1,SERIAL2,SERIAL3 --host-gateway 172.17.0.1
+```
+
 Build and start:
 
 ```bash
@@ -101,6 +111,17 @@ Open:
 - Sensor 3: <http://localhost:49163/>
 - Localization: <http://localhost:49256/>
 - tar1090: <http://localhost:8080/>
+
+If the localization page opens but `/map/index.html` shows only the AirRadar
+controls on a blank white page, verify the Cesium asset proxy:
+
+```bash
+curl -I http://127.0.0.1:49256/cesium/Build/Cesium/Cesium.js
+```
+
+It should return `HTTP/1.1 200`. AirRadar Multi-radio provides the required
+`cesium-apache` network alias for the Cesium container; after updating an older
+checkout, rebuild and recreate the localization services.
 
 ## Save And Replay Layout
 
