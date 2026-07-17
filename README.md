@@ -184,6 +184,10 @@ Prepare patched web roots after updating the AirRadar source:
 script/prepare_web_roots.bash
 ```
 
+This also writes each sensor web container's Apache proxy file so the original
+AirRadar `/api/*` and `/stash/*` browser routes reach the matching sensor API
+port.
+
 Stop the stack:
 
 ```bash

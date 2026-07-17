@@ -193,6 +193,29 @@ curl -s http://127.0.0.1:3200/api/config | python3 -m json.tool | head
 curl -s http://127.0.0.1:3300/api/config | python3 -m json.tool | head
 ```
 
+Check the browser-facing AirRadar display data routes:
+
+```bash
+for port in 49161 49162 49163; do
+  echo "Sensor web port ${port}"
+  curl -s "http://127.0.0.1:${port}/stash/map" | head -c 80; echo
+  curl -s "http://127.0.0.1:${port}/stash/iqdata" | head -c 80; echo
+  curl -s "http://127.0.0.1:${port}/stash/timing" | head -c 80; echo
+  curl -s "http://127.0.0.1:${port}/stash/detection" | head -c 80; echo
+done
+```
+
+The AirRadar max-hold, spectrum, timing, and detection-history pages use the
+original `/stash/*` URLs. In Multi-radio, each sensor web container proxies
+those URLs to its matching API port. If the API ports work but the web ports
+return `404`, regenerate the web roots and recreate the web containers:
+
+```bash
+cd /opt/airradar-multiradio
+script/prepare_web_roots.bash
+docker compose --profile airradar up -d --no-deps sensor1_web sensor2_web sensor3_web
+```
+
 Check ADS-B:
 
 ```bash

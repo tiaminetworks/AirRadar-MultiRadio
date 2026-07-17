@@ -23,6 +23,16 @@ prepare_one() {
   # its own API port, so patch the generated web roots without touching source.
   find "${out}" -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) \
     -exec perl -0pi -e "s/:3000/:${api_port}/g" {} +
+
+  cat > "${out}/httpd-airradar-proxy.conf" <<EOF
+ProxyPreserveHost On
+ProxyPass /api/ http://host.docker.internal:${api_port}/api/
+ProxyPassReverse /api/ http://host.docker.internal:${api_port}/api/
+ProxyPass /stash/ http://host.docker.internal:${api_port}/stash/
+ProxyPassReverse /stash/ http://host.docker.internal:${api_port}/stash/
+ProxyPass /maxhold/ http://host.docker.internal:${api_port}/maxhold/
+ProxyPassReverse /maxhold/ http://host.docker.internal:${api_port}/maxhold/
+EOF
 }
 
 prepare_one sensor1 3100

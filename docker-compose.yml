@@ -39,9 +39,15 @@ x-airradar-web: &airradar-web
   image: httpd:2.4
   command: >
     /bin/sh -c "sed -i 's/^#LoadModule headers_module/LoadModule headers_module/' /usr/local/apache2/conf/httpd.conf &&
+    sed -i 's/^#LoadModule proxy_module/LoadModule proxy_module/' /usr/local/apache2/conf/httpd.conf &&
+    sed -i 's/^#LoadModule proxy_http_module/LoadModule proxy_http_module/' /usr/local/apache2/conf/httpd.conf &&
     (grep -q 'conf/extra/httpd-no-cache.conf' /usr/local/apache2/conf/httpd.conf ||
     printf '\nInclude conf/extra/httpd-no-cache.conf\n' >> /usr/local/apache2/conf/httpd.conf) &&
+    (grep -q 'conf/extra/httpd-airradar-proxy.conf' /usr/local/apache2/conf/httpd.conf ||
+    printf '\nInclude conf/extra/httpd-airradar-proxy.conf\n' >> /usr/local/apache2/conf/httpd.conf) &&
     httpd-foreground"
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   networks:
     - airradar_multiradio
   profiles:
@@ -81,6 +87,7 @@ services:
     volumes:
       - ./build/web/sensor1:/usr/local/apache2/htdocs:ro
       - ./script/httpd-no-cache.conf:/usr/local/apache2/conf/extra/httpd-no-cache.conf:ro
+      - ./build/web/sensor1/httpd-airradar-proxy.conf:/usr/local/apache2/conf/extra/httpd-airradar-proxy.conf:ro
 
   sensor2:
     <<: *airradar-runtime
@@ -115,6 +122,7 @@ services:
     volumes:
       - ./build/web/sensor2:/usr/local/apache2/htdocs:ro
       - ./script/httpd-no-cache.conf:/usr/local/apache2/conf/extra/httpd-no-cache.conf:ro
+      - ./build/web/sensor2/httpd-airradar-proxy.conf:/usr/local/apache2/conf/extra/httpd-airradar-proxy.conf:ro
 
   sensor3:
     <<: *airradar-runtime
@@ -149,6 +157,7 @@ services:
     volumes:
       - ./build/web/sensor3:/usr/local/apache2/htdocs:ro
       - ./script/httpd-no-cache.conf:/usr/local/apache2/conf/extra/httpd-no-cache.conf:ro
+      - ./build/web/sensor3/httpd-airradar-proxy.conf:/usr/local/apache2/conf/extra/httpd-airradar-proxy.conf:ro
 
   localization_api:
     restart: unless-stopped
