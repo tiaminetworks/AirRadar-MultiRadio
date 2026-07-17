@@ -223,6 +223,29 @@ curl -s http://127.0.0.1:8080/data/aircraft.json | python3 -m json.tool | head
 curl -s http://127.0.0.1:49155/api/dd | head
 ```
 
+Check the ADS-B truth sources exposed by AirRadar Localization:
+
+```bash
+curl -s http://127.0.0.1:49256/api/adsb/sources | python3 -m json.tool
+curl -s http://127.0.0.1:49256/api/adsb/airplanes-live/data/aircraft.json \
+  | python3 -m json.tool | head
+```
+
+The normal local source is `local tar1090`. The online choices are
+`Airplanes.live online`, `ADSB.lol online`, and `ADS-B Exchange online`. The
+first two are public point-radius feeds. `ADS-B Exchange online` requires an API
+key:
+
+```bash
+cd /opt/airradar-multiradio
+perl -0pi -e 's/^ADSB_EXCHANGE_API_KEY=.*/ADSB_EXCHANGE_API_KEY=YOUR_KEY/' .env
+docker compose --profile localization up -d --build localization_api localization_event
+```
+
+If the Mini PC has no internet access, keep the localization ADS-B truth source
+set to `local tar1090`; the online providers will return an API error instead
+of affecting the local tar1090 path.
+
 Check localization:
 
 ```bash

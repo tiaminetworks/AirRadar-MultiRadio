@@ -15,6 +15,20 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 SENSOR_KEYS = ["sensor1", "sensor2", "sensor3"]
 DEFAULT_HOST_GATEWAY = "172.17.0.1"
+ONLINE_ADSB_SERVERS = [
+    {
+        "name": "Airplanes.live online",
+        "url": "http://localization_api:5000/api/adsb/airplanes-live",
+    },
+    {
+        "name": "ADSB.lol online",
+        "url": "http://localization_api:5000/api/adsb/adsb-lol",
+    },
+    {
+        "name": "ADS-B Exchange online",
+        "url": "http://localization_api:5000/api/adsb/adsb-exchange",
+    },
+]
 
 
 def detect_serials() -> list[str]:
@@ -109,8 +123,15 @@ def update_localization_config(serials: list[str], args: argparse.Namespace) -> 
     data["map"]["location"]["longitude"] = args.rx_lon
     data["map"]["tar1090"] = f"{args.host_gateway}:8080"
     data["map"]["tar1090_servers"] = [
-        {"name": "local tar1090", "url": f"{args.host_gateway}:8080"}
+        {"name": "local tar1090", "url": f"{args.host_gateway}:8080"},
+        *ONLINE_ADSB_SERVERS,
     ]
+    online = data["map"].setdefault("adsb_online", {})
+    online.setdefault("defaultRadiusNm", 80)
+    online.setdefault("timeoutSec", 4)
+    center = online.setdefault("center", {})
+    center["latitude"] = args.rx_lat
+    center["longitude"] = args.rx_lon
     save_yaml(path, data)
 
 

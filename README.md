@@ -118,6 +118,41 @@ Open:
 - Localization: <http://localhost:49256/>
 - tar1090: <http://localhost:8080/>
 
+## ADS-B Truth Sources
+
+AirRadar Multi-radio keeps local tar1090 as the default ADS-B truth source and
+adds three online options for situations where a local ADS-B receiver is not
+available or is temporarily unhealthy:
+
+- `local tar1090`: local RTL-SDR/readsb/tar1090 stack on port `8080`.
+- `Airplanes.live online`: public point-radius aircraft feed proxied by
+  AirRadar Localization.
+- `ADSB.lol online`: public point-radius aircraft feed proxied by AirRadar
+  Localization.
+- `ADS-B Exchange online`: API-key provider proxied by AirRadar Localization.
+  Set `ADSB_EXCHANGE_API_KEY` in `.env` before selecting it.
+
+All online choices are exposed as tar1090-compatible URLs under the localization
+API, so existing ADS-B truth display and adsb2dd delay-Doppler conversion keep
+working. The online search center defaults to the configured RX site and the
+radius defaults to `80` nautical miles.
+
+Verify the configured source list:
+
+```bash
+curl -s http://127.0.0.1:49256/api/adsb/sources | python3 -m json.tool
+```
+
+Smoke-test the first online source:
+
+```bash
+curl -s http://127.0.0.1:49256/api/adsb/airplanes-live/data/aircraft.json \
+  | python3 -m json.tool | head
+```
+
+If internet access is unavailable, leave the ADS-B truth source on
+`local tar1090`.
+
 If the localization page opens but `/map/index.html` shows only the AirRadar
 controls on a blank white page, verify the Cesium asset proxy:
 

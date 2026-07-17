@@ -159,6 +159,18 @@ map:
   tar1090_servers:
   - name: local tar1090
     url: 172.17.0.1:8080
+  - name: Airplanes.live online
+    url: http://localization_api:5000/api/adsb/airplanes-live
+  - name: ADSB.lol online
+    url: http://localization_api:5000/api/adsb/adsb-lol
+  - name: ADS-B Exchange online
+    url: http://localization_api:5000/api/adsb/adsb-exchange
+  adsb_online:
+    defaultRadiusNm: 80
+    timeoutSec: 4
+    center:
+      latitude: 38.58000207566816
+      longitude: -121.49606043119596
 airradar:
   save: true
   savePath: /app/save
