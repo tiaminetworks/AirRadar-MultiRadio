@@ -180,6 +180,8 @@ services:
       - ./save/localization:/app/save:ro
     environment:
       AIRRADAR_LOCALIZATION_VERSION: ${AIRRADAR_LOCALIZATION_VERSION:-multiradio}
+      AIRRADAR_LOCALIZATION_EVENT_HOST: ${AIRRADAR_LOCALIZATION_EVENT_HOST:-localization_event}
+      AIRRADAR_LOCALIZATION_EVENT_PORT: ${AIRRADAR_LOCALIZATION_EVENT_PORT:-6969}
     profiles:
       - localization
 
