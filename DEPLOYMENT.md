@@ -229,7 +229,8 @@ script/restart_sensor.bash sensor2 all
 ```
 
 Use `sensor1`, `sensor2`, or `sensor3`. The optional second argument can be
-`web`, `api`, `runtime`, or `all`.
+`web`, `api`, `runtime`, or `all`. The `web` and `all` modes force-recreate the
+web container so Docker rebinds the freshly generated web root.
 
 If the API ports work but the web ports return `404`, recreate the web
 containers:

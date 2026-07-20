@@ -25,7 +25,7 @@ compose() {
 
 restart_web() {
   "${ROOT}/script/prepare_web_roots.bash"
-  compose up -d --no-deps "${sensor}_web"
+  compose up -d --force-recreate --no-deps "${sensor}_web"
 }
 
 case "${target}" in

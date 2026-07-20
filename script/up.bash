@@ -9,8 +9,10 @@ python3 script/validate.py
 
 if docker compose version >/dev/null 2>&1; then
   docker compose --profile airradar --profile localization --profile adsb up -d
+  docker compose --profile airradar up -d --force-recreate --no-deps sensor1_web sensor2_web sensor3_web
 else
   docker-compose --profile airradar --profile localization --profile adsb up -d
+  docker-compose --profile airradar up -d --force-recreate --no-deps sensor1_web sensor2_web sensor3_web
 fi
 
 echo

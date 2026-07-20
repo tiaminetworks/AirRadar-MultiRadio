@@ -14,8 +14,8 @@ prepare_one() {
   local sensor="$1"
   local api_port="$2"
   local out="${ROOT}/build/web/${sensor}"
-  rm -rf "${out}"
   mkdir -p "${out}"
+  find "${out}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
   cp -a "${AIRRADAR_SOURCE}/html/." "${out}/"
   find "${out}" -type f -name '*.bak' -delete
 
