@@ -7,12 +7,12 @@ cd "${ROOT}"
 "${ROOT}/script/prepare_web_roots.bash"
 python3 script/validate.py
 
+docker rm -f airradar-mr-sensor1-web airradar-mr-sensor2-web airradar-mr-sensor3-web >/dev/null 2>&1 || true
+
 if docker compose version >/dev/null 2>&1; then
   docker compose --profile airradar --profile localization --profile adsb up -d
-  docker compose --profile airradar up -d --force-recreate --no-deps sensor1_web sensor2_web sensor3_web
 else
   docker-compose --profile airradar --profile localization --profile adsb up -d
-  docker-compose --profile airradar up -d --force-recreate --no-deps sensor1_web sensor2_web sensor3_web
 fi
 
 echo

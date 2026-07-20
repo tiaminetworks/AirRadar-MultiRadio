@@ -25,7 +25,11 @@ compose() {
 
 restart_web() {
   "${ROOT}/script/prepare_web_roots.bash"
-  compose up -d --force-recreate --no-deps "${sensor}_web"
+  # docker-compose v1 can fail with KeyError: ContainerConfig on recreate.
+  # Removing the web container first avoids that legacy convergence path and
+  # also guarantees the bind-mounted generated web root is rebound.
+  docker rm -f "airradar-mr-${sensor}-web" >/dev/null 2>&1 || true
+  compose up -d --no-deps "${sensor}_web"
 }
 
 case "${target}" in
