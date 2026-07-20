@@ -4,6 +4,24 @@ This guide deploys one Ubuntu 22.04 Mini PC with three local USRP B210
 two-channel SDRs, one ADS-B receiver stack, three AirRadar sensor instances,
 and one AirRadar Localization instance.
 
+Use the scripts in this repo whenever possible. They hide the difference
+between `docker compose` v2 and legacy `docker-compose` v1, regenerate sensor
+web roots, and avoid known web-container recreate issues.
+
+## Fresh Deployment Checklist
+
+For a new Mini PC such as `airradar-2`, the successful path is:
+
+1. Install packages, Docker, UHD, and UHD images.
+2. Clone this repo into `/opt/airradar-multiradio`.
+3. Run `script/bootstrap_sources.bash`.
+4. Connect three B210s and one RTL-SDR ADS-B receiver.
+5. Verify three B210 serials with `uhd_find_devices`.
+6. Configure serials, RX/TX geometry, frequency, rate, and bandwidth with
+   `script/configure_b210s.py`.
+7. Run `script/test.bash`, `script/build.bash`, and `script/up.bash`.
+8. Verify all sensor web, `/stash/*`, localization, and tar1090 endpoints.
+
 ## 1. Install Ubuntu Packages
 
 ```bash
@@ -11,22 +29,26 @@ sudo apt update
 sudo apt install -y \
   git curl ca-certificates gnupg lsb-release \
   python3 python3-pip python3-yaml \
+  usbutils rtl-sdr \
   uhd-host libuhd-dev
 ```
 
-Install Docker Engine and the Docker Compose plugin if they are not already
-installed:
+Install Docker Engine and a Compose command. Ubuntu 22.04 deployments may have
+either modern `docker compose` or legacy `docker-compose`; AirRadar scripts
+support both.
 
 ```bash
-sudo apt install -y docker.io docker-compose-plugin
+sudo apt install -y docker.io
+sudo apt install -y docker-compose-plugin || sudo apt install -y docker-compose
 sudo usermod -aG docker "$USER"
 newgrp docker
+docker compose version || docker-compose --version
 ```
 
 Download UHD images:
 
 ```bash
-sudo uhd_images_downloader
+sudo uhd_images_downloader || sudo /usr/lib/uhd/utils/uhd_images_downloader.py
 ```
 
 Reload USB rules:
@@ -44,6 +66,10 @@ sudo chown -R "$USER":"$USER" /opt/airradar-multiradio
 cd /opt/airradar-multiradio
 cp .env.example .env
 ```
+
+If GitHub asks for a password, use a GitHub personal access token instead of
+the account password. Do not save the token on the Mini PC unless you explicitly
+want credential persistence.
 
 ## 3. Pull Component Sources
 
@@ -84,10 +110,19 @@ uhd_find_devices
 
 Expected result: three B210 devices, each with a unique serial.
 
-If UHD cannot find the images, run:
+If `uhd_find_devices` is missing, reinstall `uhd-host`. If UHD cannot find B200
+firmware or FPGA images, run:
 
 ```bash
-sudo uhd_images_downloader
+sudo uhd_images_downloader || sudo /usr/lib/uhd/utils/uhd_images_downloader.py
+```
+
+Then reload USB rules and replug the B210s:
+
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+uhd_find_devices
 ```
 
 The sensor runtime containers include a hardware wait wrapper. If a configured
@@ -116,6 +151,17 @@ script/configure_b210s.py \
   --tx-lat YOUR_TX_LAT --tx-lon YOUR_TX_LONG --tx-alt YOUR_TX_ALT_M --tx-ant YOUR_TX_ANT_M \
   --center-hz 521000000 --rate-hz 5000000 --bandwidth-hz 5000000
 ```
+
+Start conservatively if the Mini PC, USB topology, or CPU headroom is unknown:
+
+```bash
+script/configure_b210s.py \
+  --serials SERIAL1,SERIAL2,SERIAL3 \
+  --rate-hz 3000000 --bandwidth-hz 3000000
+```
+
+Increase to `4000000` or `5000000` only after the logs show stable CPI timing
+without repeated overrun warnings.
 
 The localization map URLs must be reachable from both Docker containers and the
 host browser. On a normal Ubuntu Docker bridge, keep the default host gateway
@@ -166,6 +212,10 @@ script/up.bash
 script/status.bash
 ```
 
+`script/up.bash` regenerates patched AirRadar web roots and removes/recreates
+sensor web containers before startup. This prevents stale bind mounts and avoids
+the legacy `docker-compose` v1 `ContainerConfig` recreate bug.
+
 Open:
 
 ```text
@@ -182,7 +232,7 @@ Check containers:
 
 ```bash
 cd /opt/airradar-multiradio
-docker compose --profile airradar --profile localization --profile adsb ps
+script/status.bash
 ```
 
 Check AirRadar APIs:
@@ -237,8 +287,7 @@ containers:
 
 ```bash
 cd /opt/airradar-multiradio
-script/prepare_web_roots.bash
-docker compose --profile airradar up -d --no-deps sensor1_web sensor2_web sensor3_web
+script/up.bash
 ```
 
 Check ADS-B:
@@ -264,7 +313,8 @@ key:
 ```bash
 cd /opt/airradar-multiradio
 perl -0pi -e 's/^ADSB_EXCHANGE_API_KEY=.*/ADSB_EXCHANGE_API_KEY=YOUR_KEY/' .env
-docker compose --profile localization up -d --build localization_api localization_event
+script/build.bash
+script/up.bash
 ```
 
 If the Mini PC has no internet access, keep the localization ADS-B truth source
@@ -300,18 +350,24 @@ script/status.bash
 
 ```bash
 cd /opt/airradar-multiradio
+cp -a config "config.backup-$(date +%Y%m%d-%H%M%S)"
 git pull --ff-only origin main
 script/bootstrap_sources.bash
 script/test.bash
 script/build.bash
 script/up.bash
+script/status.bash
 ```
 
-If local configs have been modified, back them up first:
+To restart only one sensor after a stuck page, RF change, or API issue:
 
 ```bash
-cp -a config "config.backup-$(date +%Y%m%d-%H%M%S)"
+cd /opt/airradar-multiradio
+script/restart_sensor.bash sensor2 all
 ```
+
+Use `sensor1`, `sensor2`, or `sensor3`. The optional second argument can be
+`web`, `api`, `runtime`, or `all`.
 
 ## 11. Stopping
 

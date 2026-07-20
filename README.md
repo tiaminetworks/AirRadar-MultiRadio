@@ -53,6 +53,22 @@ useful complementary sectors, and document each RX/TX location in the configs.
 
 ## Quick Start
 
+For a fresh Ubuntu 22.04 Mini PC such as `airradar-2`, use this order:
+
+1. Install Ubuntu packages, Docker, UHD, and UHD images.
+2. Clone this repo into `/opt/airradar-multiradio`.
+3. Run `script/bootstrap_sources.bash` to fetch AirRadar, AirRadar
+   Localization, and adsb2dd source checkouts into ignored `src/` folders.
+4. Connect all three B210s and verify three unique serials with
+   `uhd_find_devices`.
+5. Run `script/configure_b210s.py` with the real serials, RX location, TX
+   location, center frequency, sample rate, and bandwidth.
+6. Run `script/test.bash`, `script/build.bash`, `script/up.bash`, and
+   `script/status.bash`.
+7. Open the three sensor pages, the localization page, and tar1090.
+
+The detailed command-by-command flow is in [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ```bash
 sudo git clone https://github.com/tiaminetworks/AirRadar-MultiRadio.git /opt/airradar-multiradio
 sudo chown -R "$USER":"$USER" /opt/airradar-multiradio
@@ -117,6 +133,17 @@ Open:
 - Sensor 3: <http://localhost:49163/>
 - Localization: <http://localhost:49256/>
 - tar1090: <http://localhost:8080/>
+
+Quick smoke test:
+
+```bash
+for port in 49161 49162 49163; do
+  curl -fsS "http://127.0.0.1:${port}/display/maxhold/" >/dev/null
+  curl -fsS "http://127.0.0.1:${port}/stash/map" >/dev/null
+done
+curl -fsS http://127.0.0.1:49256/api/status >/dev/null
+curl -fsS http://127.0.0.1:8080/data/aircraft.json >/dev/null
+```
 
 ## ADS-B Truth Sources
 
@@ -204,6 +231,25 @@ Instead it creates names beginning with `airradar-mr-`.
 The default ports are also separate from the current xband-3 deployment. This
 allows local build and config testing without stopping existing AirRadar or
 AirRadar Localization services.
+
+## Updating A Deployed Mini PC
+
+Use the scripts rather than raw `docker compose` commands when possible:
+
+```bash
+cd /opt/airradar-multiradio
+cp -a config "config.backup-$(date +%Y%m%d-%H%M%S)"
+git pull --ff-only origin main
+script/bootstrap_sources.bash
+script/test.bash
+script/build.bash
+script/up.bash
+script/status.bash
+```
+
+`script/up.bash` regenerates sensor web roots and removes/recreates the three
+sensor web containers. This avoids stale Docker bind mounts and the legacy
+`docker-compose` v1 `ContainerConfig` recreate failure.
 
 ## Development
 
