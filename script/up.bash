@@ -7,7 +7,11 @@ cd "${ROOT}"
 "${ROOT}/script/prepare_web_roots.bash"
 python3 script/validate.py
 
-docker rm -f airradar-mr-sensor1-web airradar-mr-sensor2-web airradar-mr-sensor3-web >/dev/null 2>&1 || true
+docker ps -a --format '{{.Names}}' \
+  | grep -E '(^|_)airradar-mr-sensor[123]-web$' \
+  | while IFS= read -r name; do
+      docker rm -f "${name}" >/dev/null 2>&1 || true
+    done || true
 
 if docker compose version >/dev/null 2>&1; then
   docker compose --profile airradar --profile localization --profile adsb up -d
