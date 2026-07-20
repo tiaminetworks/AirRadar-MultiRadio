@@ -207,8 +207,32 @@ done
 
 The AirRadar max-hold, spectrum, timing, and detection-history pages use the
 original `/stash/*` URLs. In Multi-radio, each sensor web container proxies
-those URLs to its matching API port. If the API ports work but the web ports
-return `404`, regenerate the web roots and recreate the web containers:
+those URLs to its matching API port. The browser should stay on the sensor web
+origin, for example `http://localhost:49162/stash/map` for sensor 2, instead of
+calling `http://localhost:3200/stash/map` directly.
+
+If a display page is stuck on a spinner, first verify the data path:
+
+```bash
+curl -I http://127.0.0.1:49162/display/maxhold/
+curl -s http://127.0.0.1:49162/stash/map | head -c 120; echo
+curl -s http://127.0.0.1:3200/stash/map | head -c 120; echo
+```
+
+If the `/stash/map` responses are present, hard-refresh the browser. If the
+browser is still stuck or the generated pages contain stale API-port URLs,
+regenerate the web roots and restart the affected sensor:
+
+```bash
+cd /opt/airradar-multiradio
+script/restart_sensor.bash sensor2 all
+```
+
+Use `sensor1`, `sensor2`, or `sensor3`. The optional second argument can be
+`web`, `api`, `runtime`, or `all`.
+
+If the API ports work but the web ports return `404`, recreate the web
+containers:
 
 ```bash
 cd /opt/airradar-multiradio

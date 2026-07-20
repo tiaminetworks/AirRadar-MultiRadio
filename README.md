@@ -220,8 +220,21 @@ script/prepare_web_roots.bash
 ```
 
 This also writes each sensor web container's Apache proxy file so the original
-AirRadar `/api/*` and `/stash/*` browser routes reach the matching sensor API
-port.
+AirRadar `/api/*`, `/stash/*`, and `/maxhold/*` browser routes reach the
+matching sensor API port from the same web origin. Sensor pages should use
+`http://localhost:49161`, `http://localhost:49162`, or
+`http://localhost:49163` without depending on direct browser access to API ports
+`3100`, `3200`, or `3300`.
+
+If one sensor display page gets stuck on a spinner, regenerate that sensor's web
+root and restart only that sensor:
+
+```bash
+script/restart_sensor.bash sensor2 all
+```
+
+Use `sensor1`, `sensor2`, or `sensor3`. The optional second argument can be
+`web`, `api`, `runtime`, or `all`.
 
 Stop the stack:
 

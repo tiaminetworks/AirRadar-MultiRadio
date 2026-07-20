@@ -24,6 +24,14 @@ prepare_one() {
   find "${out}" -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) \
     -exec perl -0pi -e "s/:3000/:${api_port}/g" {} +
 
+  # In the single-node AirRadar UI, local browser sessions call the API port
+  # directly. In MultiRadio, each sensor web container proxies /api/* and
+  # /stash/* to the matching sensor API. Keep browser traffic on the same web
+  # origin so long-running pages survive browser refreshes, SSH forwards,
+  # Cloudflare tunnels, and API-port exposure differences.
+  find "${out}" -type f \( -name '*.html' -o -name '*.js' \) \
+    -exec perl -0pi -e "s/window\\.location\\.hostname/window.location.host/g; s/global\\.location\\.hostname/global.location.host/g; s/var isLocalHost = is_localhost\\(host\\);/var isLocalHost = false;/g; s@return '//' \\+ host \\+ \\(isLocalHost \\? ':${api_port}' : ''\\) \\+ path;@return path;@g; s@return '//' \\+ host \\+ \\(isLocalHost\\(host\\) \\? ':${api_port}' : ''\\) \\+ path;@return path;@g; s@return 'http://' \\+ global\\.location\\.host \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ window\\.location\\.host \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ replayHost \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ trajectoryHost \\+ ':${api_port}' \\+ path;@return path;@g; s/:${api_port}//g" {} +
+
   cat > "${out}/httpd-airradar-proxy.conf" <<EOF
 ProxyPreserveHost On
 ProxyPass /api/ http://host.docker.internal:${api_port}/api/
