@@ -32,8 +32,16 @@ prepare_one() {
   find "${out}" -type f \( -name '*.html' -o -name '*.js' \) \
     -exec perl -0pi -e "s/window\\.location\\.hostname/window.location.host/g; s/global\\.location\\.hostname/global.location.host/g; s/var isLocalHost = is_localhost\\(host\\);/var isLocalHost = false;/g; s@return '//' \\+ host \\+ \\(isLocalHost \\? ':${api_port}' : ''\\) \\+ path;@return path;@g; s@return '//' \\+ host \\+ \\(isLocalHost\\(host\\) \\? ':${api_port}' : ''\\) \\+ path;@return path;@g; s@return 'http://' \\+ global\\.location\\.host \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ window\\.location\\.host \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ replayHost \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ trajectoryHost \\+ ':${api_port}' \\+ path;@return path;@g; s/:${api_port}//g" {} +
 
+  # Some AirRadar pages define small API helper functions with slightly
+  # different local variable names. Force those helpers to use same-origin
+  # relative URLs in the generated web roots so Logs/Settings/Performance/
+  # Sessions cannot accidentally contact another sensor API or a blocked port.
+  find "${out}" -type f \( -name '*.html' -o -name '*.js' \) ! -path '*/lib/*' \
+    -exec perl -0pi -e "s@function (airradarApiUrl|logsApiUrl|replayApiUrl|trajectoryApiUrl|apiUrl)\\(path\\)\\s*\\{\\s*return [^;]+;\\s*\\}@function \$1(path) { return path; }@gs" {} +
+
   cat > "${out}/httpd-airradar-proxy.conf" <<EOF
 ProxyPreserveHost On
+ProxyTimeout 30
 ProxyPass /api/ http://host.docker.internal:${api_port}/api/
 ProxyPassReverse /api/ http://host.docker.internal:${api_port}/api/
 ProxyPass /stash/ http://host.docker.internal:${api_port}/stash/
