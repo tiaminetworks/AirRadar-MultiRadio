@@ -1,0 +1,78 @@
+diff --git a/html/display/detection/delay-doppler/index.html b/html/display/detection/delay-doppler/index.html
+index 707c119..4c338ef 100644
+--- a/html/display/detection/delay-doppler/index.html
++++ b/html/display/detection/delay-doppler/index.html
+@@ -28,5 +28,5 @@
+   yVariable = "doppler";
+ </script>
+ <script src="../../../js/common.js"></script>
+-<script src="../../../js/plot_detection.js"></script>
++<script src="../../../js/plot_detection.js?v=20260720-display-immediate-load"></script>
+ </html>
+diff --git a/html/display/detection/delay/index.html b/html/display/detection/delay/index.html
+index 2f39ec4..1f74673 100644
+--- a/html/display/detection/delay/index.html
++++ b/html/display/detection/delay/index.html
+@@ -28,5 +28,5 @@
+   yVariable = "delay";
+ </script>
+ <script src="../../../js/common.js"></script>
+-<script src="../../../js/plot_detection.js"></script>
++<script src="../../../js/plot_detection.js?v=20260720-display-immediate-load"></script>
+ </html>
+diff --git a/html/display/detection/doppler/index.html b/html/display/detection/doppler/index.html
+index bffe417..2f725ed 100644
+--- a/html/display/detection/doppler/index.html
++++ b/html/display/detection/doppler/index.html
+@@ -28,5 +28,5 @@
+   yVariable = "doppler";
+ </script>
+ <script src="../../../js/common.js"></script>
+-<script src="../../../js/plot_detection.js"></script>
++<script src="../../../js/plot_detection.js?v=20260720-display-immediate-load"></script>
+ </html>
+diff --git a/html/display/map/index.html b/html/display/map/index.html
+index 07d4d6e..2984478 100644
+--- a/html/display/map/index.html
++++ b/html/display/map/index.html
+@@ -92,5 +92,5 @@
+ </script>
+ <script src="../../js/common.js"></script>
+ <script src="../../js/system_control.js?v=20260705-restart-exit"></script>
+-<script src="../../js/plot_map.js?v=20260702-live-objects"></script>
++<script src="../../js/plot_map.js?v=20260720-display-immediate-load"></script>
+ </html>
+diff --git a/html/display/maxhold/index.html b/html/display/maxhold/index.html
+index 43a5094..c960cf5 100644
+--- a/html/display/maxhold/index.html
++++ b/html/display/maxhold/index.html
+@@ -92,5 +92,5 @@
+ </script>
+ <script src="../../js/common.js"></script>
+ <script src="../../js/system_control.js?v=20260705-restart-exit"></script>
+-<script src="../../js/plot_map.js?v=20260702-live-objects"></script>
++<script src="../../js/plot_map.js?v=20260720-display-immediate-load"></script>
+ </html>
+diff --git a/html/display/spectrum/index.html b/html/display/spectrum/index.html
+index 11ba5e0..6db3810 100644
+--- a/html/display/spectrum/index.html
++++ b/html/display/spectrum/index.html
+@@ -24,6 +24,6 @@
+ <script>
+ </script>
+ <script src="../../js/common.js"></script>
+-<script src="../../js/plot_spectrum.js?v=20260616-spectrum-axis-zauto"></script>
++<script src="../../js/plot_spectrum.js?v=20260720-display-immediate-load"></script>
+ 
+ </html>
+diff --git a/html/display/timing/index.html b/html/display/timing/index.html
+index 0c5172c..87df021 100644
+--- a/html/display/timing/index.html
++++ b/html/display/timing/index.html
+@@ -26,5 +26,5 @@
+   yTitle = "Time (ms)";
+ </script>
+ <script src="../../js/common.js"></script>
+-<script src="../../js/plot_timing.js"></script>
++<script src="../../js/plot_timing.js?v=20260720-display-immediate-load"></script>
+ </html>

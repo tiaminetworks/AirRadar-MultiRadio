@@ -6,6 +6,7 @@ AIRRADAR_SOURCE="${AIRRADAR_SOURCE:-${ROOT}/src/airradar}"
 PERFORMANCE_PATCH="${ROOT}/patches/airradar-lightweight-performance-categories.patch"
 MAP_DISPLAY_PATCH="${ROOT}/patches/airradar-range-doppler-immediate-load.patch"
 DISPLAY_PAGES_PATCH="${ROOT}/patches/airradar-display-pages-immediate-load.patch"
+DISPLAY_CACHE_PATCH="${ROOT}/patches/airradar-display-cache-bust.patch"
 
 if [[ ! -d "${AIRRADAR_SOURCE}" ]]; then
   echo "Missing AirRadar source: ${AIRRADAR_SOURCE}" >&2
@@ -65,3 +66,9 @@ apply_overlay \
   "${AIRRADAR_SOURCE}/html/js/plot_detection.js" \
   "${DISPLAY_PAGES_PATCH}" \
   "display pages immediate load"
+
+apply_overlay \
+  "20260720-display-immediate-load" \
+  "${AIRRADAR_SOURCE}/html/display/map/index.html" \
+  "${DISPLAY_CACHE_PATCH}" \
+  "display page cache bust"
