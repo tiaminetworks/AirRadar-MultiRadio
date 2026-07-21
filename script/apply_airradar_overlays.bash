@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AIRRADAR_SOURCE="${AIRRADAR_SOURCE:-${ROOT}/src/airradar}"
-PATCH="${ROOT}/patches/airradar-lightweight-performance-categories.patch"
+PERFORMANCE_PATCH="${ROOT}/patches/airradar-lightweight-performance-categories.patch"
+MAP_DISPLAY_PATCH="${ROOT}/patches/airradar-range-doppler-immediate-load.patch"
 
 if [[ ! -d "${AIRRADAR_SOURCE}" ]]; then
   echo "Missing AirRadar source: ${AIRRADAR_SOURCE}" >&2
@@ -15,21 +16,45 @@ if [[ ! -f "${AIRRADAR_SOURCE}/api/performance_evaluator.js" ]]; then
   exit 1
 fi
 
-if grep -q "collectCategoryValuesLightweight" "${AIRRADAR_SOURCE}/api/performance_evaluator.js"; then
-  echo "AirRadar overlay already present: lightweight performance categories"
-  exit 0
-fi
-
-if [[ ! -f "${PATCH}" ]]; then
-  echo "Missing overlay patch: ${PATCH}" >&2
+if [[ ! -f "${AIRRADAR_SOURCE}/html/js/plot_map.js" ]]; then
+  echo "Missing AirRadar range-Doppler plot script under ${AIRRADAR_SOURCE}" >&2
   exit 1
 fi
 
-if git -C "${AIRRADAR_SOURCE}" apply --check "${PATCH}"; then
-  git -C "${AIRRADAR_SOURCE}" apply "${PATCH}"
-  echo "Applied AirRadar overlay: lightweight performance categories"
-else
-  echo "AirRadar overlay patch cannot apply cleanly to ${AIRRADAR_SOURCE}" >&2
-  echo "Update ${PATCH} or update the AirRadar source manually before building." >&2
-  exit 1
-fi
+apply_overlay() {
+  local marker="$1"
+  local target="$2"
+  local patch="$3"
+  local description="$4"
+
+  if grep -q "${marker}" "${target}"; then
+    echo "AirRadar overlay already present: ${description}"
+    return
+  fi
+
+  if [[ ! -f "${patch}" ]]; then
+    echo "Missing overlay patch: ${patch}" >&2
+    exit 1
+  fi
+
+  if git -C "${AIRRADAR_SOURCE}" apply --check "${patch}"; then
+    git -C "${AIRRADAR_SOURCE}" apply "${patch}"
+    echo "Applied AirRadar overlay: ${description}"
+  else
+    echo "AirRadar overlay patch cannot apply cleanly to ${AIRRADAR_SOURCE}" >&2
+    echo "Update ${patch} or update the AirRadar source manually before building." >&2
+    exit 1
+  fi
+}
+
+apply_overlay \
+  "collectCategoryValuesLightweight" \
+  "${AIRRADAR_SOURCE}/api/performance_evaluator.js" \
+  "${PERFORMANCE_PATCH}" \
+  "lightweight performance categories"
+
+apply_overlay \
+  "MAP_POLL_MS" \
+  "${AIRRADAR_SOURCE}/html/js/plot_map.js" \
+  "${MAP_DISPLAY_PATCH}" \
+  "range-Doppler immediate load"
