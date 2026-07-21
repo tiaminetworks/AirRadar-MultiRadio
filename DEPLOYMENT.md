@@ -235,6 +235,23 @@ cd /opt/airradar-multiradio
 script/status.bash
 ```
 
+Run the consistency audit:
+
+```bash
+script/audit_consistency.bash
+```
+
+The audit verifies:
+
+- local checkout equals `origin/main`
+- no tracked local source changes are present
+- generated sensor web roots preserve vendor libraries byte-for-byte
+- running sensor web containers serve the same Plotly asset as the source tree
+- the primary display, `/stash/map`, and localization status endpoints respond
+
+This is the preferred "stable deployment" check after updates, especially when
+preparing a Mini PC such as `airradar-2` from the same GitHub codebase.
+
 Check AirRadar APIs:
 
 ```bash
@@ -344,7 +361,18 @@ git pull --ff-only origin main
 script/build.bash
 script/up.bash
 script/status.bash
+script/audit_consistency.bash
 ```
+
+To compare the local development checkout with a deployed machine over SSH:
+
+```bash
+script/audit_consistency.bash airradar@tiami-airradar-1.polyedge-api-gateway.com /opt/airradar-multiradio
+```
+
+Local deployment backup files such as `config.yml.before-...` are ignored by
+git. They can remain on the Mini PC for rollback notes without making the
+source checkout appear dirty.
 
 ## 10. Updating Existing Multi-radio Deployments
 

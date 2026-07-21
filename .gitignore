@@ -3,6 +3,13 @@ build/
 *.log
 .env
 
+# Local deployment backups created before RF/runtime tuning or updates.
+config/**/*.bak
+config/**/*.backup*
+config/**/*.before-*
+config/**/*.local-*
+config.backup-*/
+
 save/**
 !save/
 !save/*/

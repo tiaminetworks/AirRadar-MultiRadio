@@ -145,6 +145,25 @@ curl -fsS http://127.0.0.1:49256/api/status >/dev/null
 curl -fsS http://127.0.0.1:8080/data/aircraft.json >/dev/null
 ```
 
+Full consistency audit:
+
+```bash
+script/audit_consistency.bash
+```
+
+To compare a deployed Mini PC such as `airradar-1` with GitHub and the local
+checkout:
+
+```bash
+script/audit_consistency.bash airradar@tiami-airradar-1.polyedge-api-gateway.com /opt/airradar-multiradio
+```
+
+The audit checks that the checkout matches `origin/main`, tracked files are
+clean, generated sensor web roots preserve vendor libraries exactly, running web
+containers serve the same Plotly asset, and the main display/data endpoints are
+reachable. A deployment is considered stable when this audit passes after
+`script/up.bash`.
+
 ## ADS-B Truth Sources
 
 AirRadar Multi-radio keeps local tar1090 as the default ADS-B truth source and
@@ -232,6 +251,12 @@ The default ports are also separate from the current xband-3 deployment. This
 allows local build and config testing without stopping existing AirRadar or
 AirRadar Localization services.
 
+Generated component sources under `src/`, generated web roots under `build/`,
+saved sessions, replay files, archive inputs, and local config backups are
+ignored by git. Runtime tuning may create files such as
+`config.yml.before-...`; those are deployment-local safety backups, not source
+changes.
+
 ## Updating A Deployed Mini PC
 
 Use the scripts rather than raw `docker compose` commands when possible:
@@ -245,6 +270,7 @@ script/test.bash
 script/build.bash
 script/up.bash
 script/status.bash
+script/audit_consistency.bash
 ```
 
 `script/up.bash` regenerates sensor web roots and removes/recreates the three
