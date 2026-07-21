@@ -28,7 +28,7 @@ short_commit() {
 }
 
 check "Git revision"
-if git fetch origin main >/dev/null 2>&1; then
+if GIT_TERMINAL_PROMPT=0 git fetch origin main >/dev/null 2>&1; then
   :
 else
   warn "Could not fetch origin/main; using local remote-tracking ref."
