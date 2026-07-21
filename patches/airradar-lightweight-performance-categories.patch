@@ -1,0 +1,223 @@
+diff --git a/api/performance_evaluator.js b/api/performance_evaluator.js
+index f19b85b..eef1682 100644
+--- a/api/performance_evaluator.js
++++ b/api/performance_evaluator.js
+@@ -5012,8 +5012,7 @@ function evaluate(saveDir, config, request = {}) {
+   };
+ }
+ 
+-function collectCategoryValues(saveDir, config, request = {}) {
+-  const sessions = selectEvaluationSessions(saveDir, request);
++function createCategoryAccumulator() {
+   const fields = {};
+   CATEGORY_FIELDS.forEach((field) => {
+     fields[field.id] = {
+@@ -5022,6 +5021,59 @@ function collectCategoryValues(saveDir, config, request = {}) {
+       values: {}
+     };
+   });
++  return fields;
++}
++
++function addAircraftToCategoryAccumulator(fields, aircraft) {
++  CATEGORY_FIELDS.forEach((field) => {
++    const value = getAircraftCategoryValue(aircraft, field.id);
++    if (!fields[field.id].values[value]) {
++      fields[field.id].values[value] = {
++        value,
++        label: value,
++        observations: 0,
++        aircraft: new Set()
++      };
++    }
++    fields[field.id].values[value].observations += 1;
++    fields[field.id].values[value].aircraft.add(
++      aircraft.hex || aircraft.registration || aircraft.flight || aircraft.id
++    );
++  });
++}
++
++function categoryAccumulatorToResponse(fields, sessions, metadata = {}) {
++  return Object.assign({
++    sessionIds: sessions.map((session) => session.id),
++    fields: CATEGORY_FIELDS.map((field) => {
++      const values = Object.keys(fields[field.id].values)
++        .map((key) => {
++          const entry = fields[field.id].values[key];
++          return {
++            value: entry.value,
++            label: entry.label,
++            observations: entry.observations,
++            aircraft: entry.aircraft.size
++          };
++        })
++        .sort((a, b) => {
++          if (b.observations !== a.observations) {
++            return b.observations - a.observations;
++          }
++          return a.label.localeCompare(b.label);
++        });
++      return {
++        id: field.id,
++        label: field.label,
++        values
++      };
++    })
++  }, metadata);
++}
++
++function collectCategoryValues(saveDir, config, request = {}) {
++  const sessions = selectEvaluationSessions(saveDir, request);
++  const fields = createCategoryAccumulator();
+ 
+   sessions.forEach((session) => {
+     const truthFile = getTruthFile(session);
+@@ -5047,49 +5099,61 @@ function collectCategoryValues(saveDir, config, request = {}) {
+         { rx: frame.rx || {} }
+       );
+       aircraftInRegion.forEach((aircraft) => {
+-        CATEGORY_FIELDS.forEach((field) => {
+-          const value = getAircraftCategoryValue(aircraft, field.id);
+-          if (!fields[field.id].values[value]) {
+-            fields[field.id].values[value] = {
+-              value,
+-              label: value,
+-              observations: 0,
+-              aircraft: new Set()
+-            };
+-          }
+-          fields[field.id].values[value].observations += 1;
+-          fields[field.id].values[value].aircraft.add(aircraft.hex || aircraft.registration || aircraft.flight || aircraft.id);
+-        });
++        addAircraftToCategoryAccumulator(fields, aircraft);
+       });
+     });
+   });
+ 
+-  return {
+-    sessionIds: sessions.map((session) => session.id),
+-    fields: CATEGORY_FIELDS.map((field) => {
+-      const values = Object.keys(fields[field.id].values)
+-        .map((key) => {
+-          const entry = fields[field.id].values[key];
+-          return {
+-            value: entry.value,
+-            label: entry.label,
+-            observations: entry.observations,
+-            aircraft: entry.aircraft.size
+-          };
+-        })
+-        .sort((a, b) => {
+-          if (b.observations !== a.observations) {
+-            return b.observations - a.observations;
+-          }
+-          return a.label.localeCompare(b.label);
+-        });
+-      return {
+-        id: field.id,
+-        label: field.label,
+-        values
+-      };
+-    })
+-  };
++  return categoryAccumulatorToResponse(fields, sessions, { lightweight: false });
++}
++
++function collectCategoryValuesLightweight(saveDir, config, request = {}) {
++  const allSessions = selectEvaluationSessions(saveDir, request);
++  const maxSessions = Math.max(1, Math.min(200, Number(request.maxCategorySessions) || 80));
++  const maxFramesPerSession = Math.max(1, Math.min(1000, Number(request.maxCategoryFramesPerSession) || 120));
++  const maxBytesPerSession = Math.max(64 * 1024, Math.min(4 * 1024 * 1024,
++    Number(request.maxCategoryBytesPerSession) || 512 * 1024));
++  const sessions = allSessions.slice(0, maxSessions);
++  const fields = createCategoryAccumulator();
++  let framesRead = 0;
++  let truncated = allSessions.length > sessions.length;
++
++  sessions.forEach((session) => {
++    const truthFile = getTruthFile(session);
++    if (!truthFile) {
++      return;
++    }
++    const sessionConfig = configForSession(session, config, request);
++    const { profile: sessionProfile } = normalizeProfile(sessionConfig, Object.assign({}, request, {
++      aircraftFilterField: '',
++      aircraftFilterValue: ''
++    }));
++    const frames = readRecentJsonLinesFile(truthFile.path, maxBytesPerSession)
++      .slice(-maxFramesPerSession);
++    if (frames.length >= maxFramesPerSession) {
++      truncated = true;
++    }
++    framesRead += frames.length;
++    frames.forEach((frame) => {
++      filterTruthAircraft(
++        normalizeAdsbAircraft({ aircraft: frame.aircraft || [] }),
++        sessionProfile,
++        { rx: frame.rx || {} }
++      ).forEach((aircraft) => {
++        addAircraftToCategoryAccumulator(fields, aircraft);
++      });
++    });
++  });
++
++  return categoryAccumulatorToResponse(fields, sessions, {
++    lightweight: true,
++    truncated,
++    totalSessions: allSessions.length,
++    sessionsScanned: sessions.length,
++    framesRead,
++    maxFramesPerSession,
++    maxBytesPerSession
++  });
+ }
+ 
+ function csvTruthAltitudeFields(truth) {
+@@ -5263,6 +5327,7 @@ module.exports = {
+   trajectoryComparison,
+   diagnosticsReport,
+   collectCategoryValues,
++  collectCategoryValuesLightweight,
+   resultToCsv,
+   readJsonLinesFile,
+   latestRadarSession
+diff --git a/api/server.js b/api/server.js
+index 0c85739..a51ecc7 100644
+--- a/api/server.js
++++ b/api/server.js
+@@ -3213,17 +3213,26 @@ app.post('/api/performance/settings', (req, res) => {
+ });
+ app.get('/api/performance/categories', (req, res) => {
+   try {
+-    res.json(performance_evaluator.collectCategoryValues(
++    const fullScan = String(req.query.full || req.query.details || '')
++      .toLowerCase() === 'true' ||
++      String(req.query.details || '').toLowerCase() === 'full';
++    const request = {
++      sessionId: req.query.sessionId || req.query.session || '',
++      allSessions: req.query.allSessions === 'true' || req.query.sessionId === '__all__',
++      profile: req.query.profile,
++      candidateMode: req.query.candidateMode,
++      regionMode: req.query.regionMode,
++      radiusKm: req.query.radiusKm,
++      maxCategorySessions: req.query.maxCategorySessions,
++      maxCategoryFramesPerSession: req.query.maxCategoryFramesPerSession,
++      maxCategoryBytesPerSession: req.query.maxCategoryBytesPerSession
++    };
++    res.json((fullScan ?
++      performance_evaluator.collectCategoryValues :
++      performance_evaluator.collectCategoryValuesLightweight)(
+       getApiSaveDir(),
+       config,
+-      {
+-        sessionId: req.query.sessionId || req.query.session || '',
+-        allSessions: req.query.allSessions === 'true' || req.query.sessionId === '__all__',
+-        profile: req.query.profile,
+-        candidateMode: req.query.candidateMode,
+-        regionMode: req.query.regionMode,
+-        radiusKm: req.query.radiusKm
+-      }
++      request
+     ));
+   } catch (e) {
+     res.status(400).json({ error: e.message });

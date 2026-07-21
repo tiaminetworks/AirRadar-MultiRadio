@@ -10,6 +10,7 @@ if [[ ! -d "${AIRRADAR_SOURCE:-${ROOT}/src/airradar}" ]] ||
   echo "Missing source checkouts; running bootstrap first."
   "${ROOT}/script/bootstrap_sources.bash"
 else
+  "${ROOT}/script/apply_airradar_overlays.bash"
   "${ROOT}/script/prepare_web_roots.bash"
 fi
 

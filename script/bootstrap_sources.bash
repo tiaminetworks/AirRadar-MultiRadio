@@ -25,6 +25,7 @@ clone_or_update "${AIRRADAR_REPO}" "${SRC_DIR}/airradar"
 clone_or_update "${LOCALIZATION_REPO}" "${SRC_DIR}/airradar-localization"
 clone_or_update "${ADSB2DD_REPO}" "${SRC_DIR}/adsb2dd"
 
+"${ROOT}/script/apply_airradar_overlays.bash"
 "${ROOT}/script/prepare_web_roots.bash"
 
 echo
