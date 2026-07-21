@@ -30,7 +30,7 @@ apply_overlay() {
   local patch="$3"
   local description="$4"
 
-  if grep -q "${marker}" "${target}"; then
+  if grep -Eq "${marker}" "${target}"; then
     echo "AirRadar overlay already present: ${description}"
     return
   fi
@@ -69,7 +69,7 @@ apply_overlay \
   "display pages immediate load"
 
 apply_overlay \
-  "20260720-display-immediate-load" \
+  "20260720-display-immediate-load|20260720-display-singleflight" \
   "${AIRRADAR_SOURCE}/html/display/map/index.html" \
   "${DISPLAY_CACHE_PATCH}" \
   "display page cache bust"
