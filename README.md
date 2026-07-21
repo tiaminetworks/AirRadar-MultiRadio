@@ -53,7 +53,8 @@ useful complementary sectors, and document each RX/TX location in the configs.
 
 ## Quick Start
 
-For a fresh Ubuntu 22.04 Mini PC such as `airradar-2`, use this order:
+For a fresh Ubuntu 22.04 Mini PC such as `airradar-2`, use this order. The
+full command-by-command procedure is in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 1. Install Ubuntu packages, Docker, UHD, and UHD images.
 2. Clone this repo into `/opt/airradar-multiradio`.
@@ -65,9 +66,11 @@ For a fresh Ubuntu 22.04 Mini PC such as `airradar-2`, use this order:
    location, center frequency, sample rate, and bandwidth.
 6. Run `script/test.bash`, `script/build.bash`, `script/up.bash`, and
    `script/status.bash`.
-7. Open the three sensor pages, the localization page, and tar1090.
+7. Run `script/audit_consistency.bash`.
+8. Open the three sensor pages, the localization page, and tar1090.
 
-The detailed command-by-command flow is in [DEPLOYMENT.md](DEPLOYMENT.md).
+Start new hardware at `3 MHz` sample rate/bandwidth. Increase only after the
+AirRadar logs show stable CPI timing without repeated overrun warnings.
 
 ```bash
 sudo git clone https://github.com/tiaminetworks/AirRadar-MultiRadio.git /opt/airradar-multiradio
@@ -105,7 +108,7 @@ script/configure_b210s.py \
   --site-name "Multi-radio Test Site" \
   --tx-name "KTXL RF22 ATSC 1.0" \
   --tx-lat 38.271667 --tx-lon -121.506111 --tx-alt 602 --tx-ant 601 \
-  --center-hz 521000000 --rate-hz 5000000 --bandwidth-hz 5000000
+  --center-hz 521000000 --rate-hz 3000000 --bandwidth-hz 3000000
 ```
 
 On Ubuntu Docker bridge deployments, the localization browser and containers
@@ -247,9 +250,9 @@ This project does not reuse the existing AirRadar service names:
 
 Instead it creates names beginning with `airradar-mr-`.
 
-The default ports are also separate from the current xband-3 deployment. This
-allows local build and config testing without stopping existing AirRadar or
-AirRadar Localization services.
+The default ports are also separate from standalone AirRadar deployments. This
+allows local build and config testing without stopping other AirRadar or
+AirRadar Localization services on the same machine.
 
 Generated component sources under `src/`, generated web roots under `build/`,
 saved sessions, replay files, archive inputs, and local config backups are
@@ -259,7 +262,7 @@ changes.
 
 ## Updating A Deployed Mini PC
 
-Use the scripts rather than raw `docker compose` commands when possible:
+Use the scripts rather than raw `docker compose` commands:
 
 ```bash
 cd /opt/airradar-multiradio
@@ -276,6 +279,12 @@ script/audit_consistency.bash
 `script/up.bash` regenerates sensor web roots and removes/recreates the three
 sensor web containers. This avoids stale Docker bind mounts and the legacy
 `docker-compose` v1 `ContainerConfig` recreate failure.
+
+For remote parity checks, run the audit from a development machine:
+
+```bash
+script/audit_consistency.bash airradar@HOSTNAME /opt/airradar-multiradio
+```
 
 ## Development
 

@@ -20,7 +20,22 @@ For a new Mini PC such as `airradar-2`, the successful path is:
 6. Configure serials, RX/TX geometry, frequency, rate, and bandwidth with
    `script/configure_b210s.py`.
 7. Run `script/test.bash`, `script/build.bash`, and `script/up.bash`.
-8. Verify all sensor web, `/stash/*`, localization, and tar1090 endpoints.
+8. Run `script/status.bash` and `script/audit_consistency.bash`.
+9. Open the browser pages.
+
+Before starting, write down:
+
+| Item | Example | airradar-2 value |
+| --- | --- | --- |
+| B210 serials | `SERIAL1,SERIAL2,SERIAL3` | |
+| RX latitude / longitude / altitude m | `38.527194, -121.494611, 8` | |
+| TX name | `KTXL RF22 ATSC 1.0` | |
+| TX latitude / longitude / altitude m | `38.271667, -121.506111, 602` | |
+| Center frequency Hz | `521000000` | |
+| Starting sample rate / bandwidth Hz | `3000000 / 3000000` | |
+
+Start at `3 MHz` sample rate/bandwidth on new hardware. Raise it later only
+after logs show stable CPI timing and no repeated overrun warnings.
 
 ## 1. Install Ubuntu Packages
 
@@ -44,6 +59,9 @@ sudo usermod -aG docker "$USER"
 newgrp docker
 docker compose version || docker-compose --version
 ```
+
+If Docker still reports permission errors after `usermod`, log out and back in,
+or reboot once before continuing.
 
 Download UHD images:
 
@@ -149,7 +167,7 @@ script/configure_b210s.py \
   --site-name "Your Multi-radio Site" \
   --tx-name "Your TV Illuminator" \
   --tx-lat YOUR_TX_LAT --tx-lon YOUR_TX_LONG --tx-alt YOUR_TX_ALT_M --tx-ant YOUR_TX_ANT_M \
-  --center-hz 521000000 --rate-hz 5000000 --bandwidth-hz 5000000
+  --center-hz 521000000 --rate-hz 3000000 --bandwidth-hz 3000000
 ```
 
 Start conservatively if the Mini PC, USB topology, or CPU headroom is unknown:
@@ -204,6 +222,13 @@ script/build.bash
 The first build can take a while because AirRadar builds C++ dependencies and
 downloads UHD images inside the image.
 
+If the build fails because `src/airradar`, `src/airradar-localization`, or
+`src/adsb2dd` is missing, rerun:
+
+```bash
+script/bootstrap_sources.bash
+```
+
 ## 8. Start The Full Stack
 
 ```bash
@@ -228,18 +253,26 @@ tar1090:          http://localhost:8080/
 
 ## 9. Operational Checks
 
-Check containers:
+Use this short pass/fail sequence first:
 
 ```bash
 cd /opt/airradar-multiradio
 script/status.bash
-```
-
-Run the consistency audit:
-
-```bash
 script/audit_consistency.bash
 ```
+
+Open:
+
+```text
+Sensor 1:      http://localhost:49161/display/
+Sensor 2:      http://localhost:49162/display/
+Sensor 3:      http://localhost:49163/display/
+Localization:  http://localhost:49256/
+tar1090:       http://localhost:8080/
+```
+
+If `script/audit_consistency.bash` passes, the deployment is in the expected
+stable state.
 
 The audit verifies:
 
@@ -252,7 +285,7 @@ The audit verifies:
 This is the preferred "stable deployment" check after updates, especially when
 preparing a Mini PC such as `airradar-2` from the same GitHub codebase.
 
-Check AirRadar APIs:
+For deeper checks, inspect AirRadar APIs:
 
 ```bash
 curl -s http://127.0.0.1:3100/api/config | python3 -m json.tool | head
@@ -385,6 +418,7 @@ script/test.bash
 script/build.bash
 script/up.bash
 script/status.bash
+script/audit_consistency.bash
 ```
 
 To restart only one sensor after a stuck page, RF change, or API issue:
@@ -406,7 +440,9 @@ script/down.bash
 
 ## Notes On Performance
 
-Three B210s at 5 MS/s with two channels each is a heavy USB and CPU workload.
+Three B210s above the conservative 3 MS/s starting point can become a heavy USB
+and CPU workload. Higher rates such as 5 MS/s should be treated as a tuning step,
+not the first-boot default.
 If overrun messages appear, reduce one or more of:
 
 - Sample rate / bandwidth.
