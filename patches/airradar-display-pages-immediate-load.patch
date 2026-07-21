@@ -1,0 +1,561 @@
+diff --git a/html/display/detection/delay-doppler/index.html b/html/display/detection/delay-doppler/index.html
+index b688902..707c119 100644
+--- a/html/display/detection/delay-doppler/index.html
++++ b/html/display/detection/delay-doppler/index.html
+@@ -12,14 +12,14 @@
+   <script src="../../../lib/jquery-3.6.4.min.js"></script>
+   <!-- load lib css -->
+   <link rel="stylesheet" href="../../../lib/bootstrap-5.2.3.min.css">
++  <link rel="stylesheet" href="../../../lib/airradar.css">
+   <style>
+   </style>
+ </head>
+-<body>
+-  <div style="height: 100vh; width: 95vw" class="container-fluid">
+-    <div style="height: 100vh; width: 95vw" class="row d-flex">
+-      <div class="justify-content-center" id="data"></div>
+-    </div>
++<body class="display-plot-page">
++  <div class="display-plot-container">
++    <div class="justify-content-center" id="data"></div>
++  </div>
+ </body>
+ <script>
+   xTitle = "Bistatic Range (km)";
+diff --git a/html/display/detection/delay/index.html b/html/display/detection/delay/index.html
+index efcb8ae..2f39ec4 100644
+--- a/html/display/detection/delay/index.html
++++ b/html/display/detection/delay/index.html
+@@ -12,14 +12,14 @@
+   <script src="../../../lib/jquery-3.6.4.min.js"></script>
+   <!-- load lib css -->
+   <link rel="stylesheet" href="../../../lib/bootstrap-5.2.3.min.css">
++  <link rel="stylesheet" href="../../../lib/airradar.css">
+   <style>
+   </style>
+ </head>
+-<body>
+-  <div style="height: 100vh; width: 95vw" class="container-fluid">
+-    <div style="height: 100vh; width: 95vw" class="row d-flex">
+-      <div class="justify-content-center" id="data"></div>
+-    </div>
++<body class="display-plot-page">
++  <div class="display-plot-container">
++    <div class="justify-content-center" id="data"></div>
++  </div>
+ </body>
+ <script>
+   xTitle = "Timestamp";
+diff --git a/html/display/detection/doppler/index.html b/html/display/detection/doppler/index.html
+index 09a8af3..bffe417 100644
+--- a/html/display/detection/doppler/index.html
++++ b/html/display/detection/doppler/index.html
+@@ -12,14 +12,14 @@
+   <script src="../../../lib/jquery-3.6.4.min.js"></script>
+   <!-- load lib css -->
+   <link rel="stylesheet" href="../../../lib/bootstrap-5.2.3.min.css">
++  <link rel="stylesheet" href="../../../lib/airradar.css">
+   <style>
+   </style>
+ </head>
+-<body>
+-  <div style="height: 100vh; width: 95vw" class="container-fluid">
+-    <div style="height: 100vh; width: 95vw" class="row d-flex">
+-      <div class="justify-content-center" id="data"></div>
+-    </div>
++<body class="display-plot-page">
++  <div class="display-plot-container">
++    <div class="justify-content-center" id="data"></div>
++  </div>
+ </body>
+ <script>
+   xTitle = "Timestamp";
+diff --git a/html/display/spectrum/index.html b/html/display/spectrum/index.html
+index c0c10fb..11ba5e0 100644
+--- a/html/display/spectrum/index.html
++++ b/html/display/spectrum/index.html
+@@ -16,11 +16,10 @@
+   <style>
+   </style>
+ </head>
+-<body>
+-  <div style="height: 100vh; width: 95vw" class="container-fluid">
+-    <div style="height: 100vh; width: 95vw" class="row d-flex">
+-      <div class="justify-content-center" id="data"></div>
+-    </div>
++<body class="display-plot-page">
++  <div class="display-plot-container">
++    <div class="justify-content-center" id="data"></div>
++  </div>
+ </body>
+ <script>
+ </script>
+diff --git a/html/display/timing/index.html b/html/display/timing/index.html
+index 1141807..0c5172c 100644
+--- a/html/display/timing/index.html
++++ b/html/display/timing/index.html
+@@ -16,11 +16,10 @@
+   <style>
+   </style>
+ </head>
+-<body>
+-  <div style="height: 100vh; width: 95vw" class="container-fluid">
+-    <div style="height: 100vh; width: 95vw" class="row d-flex">
+-      <div class="justify-content-center" id="data"></div>
+-    </div>
++<body class="display-plot-page">
++  <div class="display-plot-container">
++    <div class="justify-content-center" id="data"></div>
++  </div>
+ </body>
+ <script>
+   xTitle = "Timestamp";
+diff --git a/html/js/plot_detection.js b/html/js/plot_detection.js
+index 5c50625..782ce18 100644
+--- a/html/js/plot_detection.js
++++ b/html/js/plot_detection.js
+@@ -4,6 +4,9 @@ var host = window.location.hostname;
+ var isLocalHost = is_localhost(host);
+ var range_x = [];
+ var range_y = [];
++var DISPLAY_POLL_MS = 1000;
++var DISPLAY_TIMESTAMP_FALLBACK_MS = 3000;
++var lastRefreshMs = 0;
+ 
+ // setup API
+ var urlTimestamp;
+@@ -68,6 +71,20 @@ var config = {
+   scrollZoom: true
+ }
+ 
++function plotSize() {
++  var element = document.getElementById('data');
++  return {
++    width: Math.max(element.offsetWidth || 0, window.innerWidth || 800, 800),
++    height: Math.max(element.offsetHeight || 0, window.innerHeight || 600, 600)
++  };
++}
++
++function updateLayoutSize() {
++  var size = plotSize();
++  layout.width = size.width;
++  layout.height = size.height;
++}
++
+ // setup plotly data
+ var data = [
+   {
+@@ -77,71 +94,70 @@ var data = [
+   }
+ ];
+ 
++updateLayoutSize();
+ Plotly.newPlot('data', data, layout, config);
+ 
+-// callback function
+-var intervalId = window.setInterval(function () {
++function normalizeDetectionData(data) {
++  var x = Array.isArray(data[xVariable]) ? data[xVariable].slice() : [];
++  var y = Array.isArray(data[yVariable]) ? data[yVariable].slice() : [];
+ 
+-  // check if timestamp is updated
+-  var timestampData = $.get(urlTimestamp, function () { })
+-
+-    .done(function (data) {
+-      if (timestamp != data) {
+-        timestamp = data;
++  if (xVariable === "timestamp") {
++    for (var i = 0; i < x.length; i++) {
++      x[i] = new Date(x[i]);
++    }
++  }
++  if (yVariable === "timestamp") {
++    for (var j = 0; j < y.length; j++) {
++      y[j] = new Date(y[j]);
++    }
++  }
+ 
+-        // get new data
+-        var apiData = $.getJSON(urlDetection, function () { })
+-          .done(function (data) {
++  return { x: x, y: y, nRows: data.nRows || x.length || y.length || 0 };
++}
+ 
+-            // case draw new plot
+-            if (data.nRows != nRows) {
+-              nRows = data.nRows;
++function drawDetection(data) {
++  var normalized = normalizeDetectionData(data || {});
++  var trace = {
++    x: normalized.x,
++    y: normalized.y,
++    mode: 'markers',
++    type: 'scatter'
++  };
+ 
+-              // timestamp posix to js
+-              if (xVariable === "timestamp")
+-              {
+-                for (i = 0; i < data[xVariable].length; i++)
+-                {
+-                  data[xVariable][i] = new Date(data[xVariable][i]);
+-                }
+-              }
++  nRows = normalized.nRows;
++  updateLayoutSize();
++  Plotly.react('data', [trace], layout, config);
++}
+ 
+-              var trace1 = {
+-                  x: data[xVariable],
+-                  y: data[yVariable],
+-                  mode: 'markers',
+-                  type: 'scatter'
+-              };
+-              
+-              var data_trace = [trace1];
+-              Plotly.newPlot('data', data_trace, layout, config);
+-            }
+-            // case update plot
+-            else {
+-              // timestamp posix to js
+-              if (xVariable === "timestamp")
+-              {
+-                for (i = 0; i < data[xVariable].length; i++)
+-                {
+-                  data[xVariable][i] = new Date(data[xVariable][i]);
+-                }
+-              }
+-              var trace_update = {
+-                x: [data[xVariable]],
+-                y: [data[yVariable]]
+-              };
+-              Plotly.update('data', trace_update);
+-            }
++function refreshDetectionPlot() {
++  lastRefreshMs = Date.now();
++  $.getJSON(urlDetection, function () { })
++    .done(function (data) {
++      drawDetection(data);
++    })
++    .fail(function () {
++    });
++}
+ 
+-          })
+-          .fail(function () {
+-          })
+-          .always(function () {
+-          });
++function pollTimestampAndRefresh() {
++  $.get(urlTimestamp, function () { })
++    .done(function (data) {
++      if (timestamp != data) {
++        timestamp = data;
++        refreshDetectionPlot();
+       }
+     })
+     .fail(function () {
+-    })
+-    .always(function () {
++      if (Date.now() - lastRefreshMs >= DISPLAY_TIMESTAMP_FALLBACK_MS) {
++        refreshDetectionPlot();
++      }
+     });
+-}, 100);
++}
++
++window.addEventListener('resize', function () {
++  updateLayoutSize();
++  Plotly.relayout('data', { width: layout.width, height: layout.height });
++});
++
++refreshDetectionPlot();
++var intervalId = window.setInterval(pollTimestampAndRefresh, DISPLAY_POLL_MS);
+diff --git a/html/js/plot_spectrum.js b/html/js/plot_spectrum.js
+index a9ca6d5..13b1e22 100644
+--- a/html/js/plot_spectrum.js
++++ b/html/js/plot_spectrum.js
+@@ -4,6 +4,9 @@ var host = window.location.hostname;
+ var isLocalHost = is_localhost(host);
+ var range_x = [];
+ var range_y = [];
++var DISPLAY_POLL_MS = 1000;
++var DISPLAY_TIMESTAMP_FALLBACK_MS = 3000;
++var lastRefreshMs = 0;
+ 
+ // setup API
+ var urlTimestamp;
+@@ -87,10 +90,14 @@ function getLatestFrequency(frequency) {
+ }
+ 
+ function drawSpectrum(data) {
++  if (!data || !Array.isArray(data.timestamp) || !Array.isArray(data.spectrum)) {
++    return;
++  }
++
+   var frequency = getLatestFrequency(data.frequency);
+ 
+   // timestamp posix to js
+-  for (i = 0; i < data.timestamp.length; i++)
++  for (var i = 0; i < data.timestamp.length; i++)
+   {
+     data.timestamp[i] = new Date(data.timestamp[i]);
+   }
+@@ -111,30 +118,30 @@ function drawSpectrum(data) {
+   Plotly.react('data', [trace], layout, config);
+ }
+ 
+-// callback function
+-var intervalId = window.setInterval(function () {
++function refreshSpectrumPlot() {
++  lastRefreshMs = Date.now();
++  $.getJSON(urlMap, function () { })
++    .done(function (data) {
++      drawSpectrum(data);
++    })
++    .fail(function () {
++    });
++}
+ 
+-  // check if timestamp is updated
++function pollTimestampAndRefresh() {
+   $.get(urlTimestamp, function () { })
+-
+     .done(function (data) {
+       if (timestamp != data) {
+         timestamp = data;
+-
+-        // get new map data
+-        $.getJSON(urlMap, function () { })
+-          .done(function (data) {
+-            drawSpectrum(data);
+-
+-          })
+-          .fail(function () {
+-          })
+-          .always(function () {
+-          });
++        refreshSpectrumPlot();
+       }
+     })
+     .fail(function () {
+-    })
+-    .always(function () {
++      if (Date.now() - lastRefreshMs >= DISPLAY_TIMESTAMP_FALLBACK_MS) {
++        refreshSpectrumPlot();
++      }
+     });
+-}, 100);
++}
++
++refreshSpectrumPlot();
++var intervalId = window.setInterval(pollTimestampAndRefresh, DISPLAY_POLL_MS);
+diff --git a/html/js/plot_timing.js b/html/js/plot_timing.js
+index d7ed33c..6cb8e81 100644
+--- a/html/js/plot_timing.js
++++ b/html/js/plot_timing.js
+@@ -3,6 +3,9 @@ var nRows = 3;
+ var keys = [];
+ var host = window.location.hostname;
+ var isLocalHost = is_localhost(host);
++var DISPLAY_POLL_MS = 1000;
++var DISPLAY_TIMESTAMP_FALLBACK_MS = 3000;
++var lastRefreshMs = 0;
+ 
+ // setup API
+ var urlTimestamp;
+@@ -73,6 +76,20 @@ var config = {
+   scrollZoom: true
+ }
+ 
++function plotSize() {
++  var element = document.getElementById('data');
++  return {
++    width: Math.max(element.offsetWidth || 0, window.innerWidth || 800, 800),
++    height: Math.max(element.offsetHeight || 0, window.innerHeight || 600, 600)
++  };
++}
++
++function updateLayoutSize() {
++  var size = plotSize();
++  layout.width = size.width;
++  layout.height = size.height;
++}
++
+ function timingSeriesKeys(data) {
+   return Object.keys(data).filter(item => (
+     item !== "timestamp" &&
+@@ -104,84 +121,73 @@ var data = [
+   }
+ ];
+ 
++updateLayoutSize();
+ Plotly.newPlot('data', data, layout, config);
+ 
+-// callback function
+-var intervalId = window.setInterval(function () {
++function drawTiming(data) {
++  if (!data || !Array.isArray(data["timestamp"])) {
++    return;
++  }
+ 
+-  // check if timestamp is updated
+-  $.get(urlTimestamp, function () { })
++  var nextKeys = timingSeriesKeys(data);
++  var timestamps = data["timestamp"].slice();
++  for (var i = 0; i < timestamps.length; i++) {
++    timestamps[i] = new Date(timestamps[i]);
++  }
++
++  var data_trace = [];
++  for (var j = 0; j < nextKeys.length; j++) {
++    var trace = {
++      x: timestamps,
++      y: Array.isArray(data[nextKeys[j]]) ? data[nextKeys[j]] : [],
++      mode: 'lines+markers',
++      type: 'scatter',
++      name: nextKeys[j],
++      line: {
++        width: 5
++      },
++      marker: {
++        size: 12
++      },
++    };
++    data_trace.push(trace);
++  }
++
++  nRows = data.nRows || timestamps.length;
++  keys = nextKeys;
++  updateLayoutSize();
++  Plotly.react('data', data_trace, layout, config);
++}
++
++function refreshTimingPlot() {
++  lastRefreshMs = Date.now();
++  $.getJSON(urlTiming, function () { })
++    .done(function (data) {
++      drawTiming(data);
++    })
++    .fail(function () {
++    });
++}
+ 
++function pollTimestampAndRefresh() {
++  $.get(urlTimestamp, function () { })
+     .done(function (data) {
+       if (timestamp != data) {
+         timestamp = data;
+-
+-        // get new data
+-        $.getJSON(urlTiming, function () { })
+-          .done(function (data) {
+-
+-            var nextKeys = timingSeriesKeys(data);
+-
+-            // case draw new plot
+-            if (data.nRows != nRows || !sameKeys(nextKeys, keys)) {
+-              nRows = data.nRows;
+-              keys = nextKeys;
+-
+-              // timestamp posix to js
+-              for (i = 0; i < data["timestamp"].length; i++)
+-              {
+-                data["timestamp"][i] = new Date(data["timestamp"][i]);
+-              }
+-
+-              data_trace = [];
+-              for (i = 0; i < keys.length; i++) {
+-                var trace = {
+-                  x: data["timestamp"],
+-                  y: data[keys[i]],
+-                  mode: 'lines+markers',
+-                  type: 'scatter',
+-                  name: keys[i],
+-                  line: {
+-                    width: 5
+-                  },
+-                  marker: {
+-                    size: 12
+-                  },
+-                };
+-                data_trace.push(trace);
+-              }
+-
+-              Plotly.newPlot('data', data_trace, layout, config);
+-            }
+-            // case update plot
+-            else {
+-              // timestamp posix to js
+-              for (i = 0; i < data["timestamp"].length; i++)
+-              {
+-                data["timestamp"][i] = new Date(data["timestamp"][i]);
+-              }
+-              var xVec = [];
+-              var yVec = [];
+-              for (i = 0; i < keys.length; i++) {
+-                xVec.push(data["timestamp"]);
+-                yVec.push(data[keys[i]]);
+-              }
+-              var trace_update = {
+-                x: xVec,
+-                y: yVec
+-              };
+-              Plotly.update('data', trace_update);
+-            }
+-
+-          })
+-          .fail(function () {
+-          })
+-          .always(function () {
+-          });
++        refreshTimingPlot();
+       }
+     })
+     .fail(function () {
+-    })
+-    .always(function () {
++      if (Date.now() - lastRefreshMs >= DISPLAY_TIMESTAMP_FALLBACK_MS) {
++        refreshTimingPlot();
++      }
+     });
+-}, 100);
++}
++
++refreshTimingPlot();
++var intervalId = window.setInterval(pollTimestampAndRefresh, DISPLAY_POLL_MS);
++
++window.addEventListener('resize', function () {
++  updateLayoutSize();
++  Plotly.relayout('data', { width: layout.width, height: layout.height });
++});
+diff --git a/html/lib/airradar.css b/html/lib/airradar.css
+index e39b97c..d00e3dc 100644
+--- a/html/lib/airradar.css
++++ b/html/lib/airradar.css
+@@ -460,6 +460,24 @@ div.plotly-notifier {
+   width: 100%;
+ }
+ 
++body.display-plot-page {
++  background: var(--air-bg);
++  margin: 0;
++  min-height: 100vh;
++  overflow: hidden;
++}
++.display-plot-container {
++  height: 100vh;
++  max-height: 100vh;
++  max-width: 100vw;
++  min-height: 600px;
++  width: 100vw;
++}
++.display-plot-container #data {
++  height: 100%;
++  width: 100%;
++}
++
+ .airradar-modal-content {
+   background: var(--air-bg);
+   border: 1px solid var(--air-panel-border);

@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AIRRADAR_SOURCE="${AIRRADAR_SOURCE:-${ROOT}/src/airradar}"
 PERFORMANCE_PATCH="${ROOT}/patches/airradar-lightweight-performance-categories.patch"
 MAP_DISPLAY_PATCH="${ROOT}/patches/airradar-range-doppler-immediate-load.patch"
+DISPLAY_PAGES_PATCH="${ROOT}/patches/airradar-display-pages-immediate-load.patch"
 
 if [[ ! -d "${AIRRADAR_SOURCE}" ]]; then
   echo "Missing AirRadar source: ${AIRRADAR_SOURCE}" >&2
@@ -58,3 +59,9 @@ apply_overlay \
   "${AIRRADAR_SOURCE}/html/js/plot_map.js" \
   "${MAP_DISPLAY_PATCH}" \
   "range-Doppler immediate load"
+
+apply_overlay \
+  "DISPLAY_TIMESTAMP_FALLBACK_MS" \
+  "${AIRRADAR_SOURCE}/html/js/plot_detection.js" \
+  "${DISPLAY_PAGES_PATCH}" \
+  "display pages immediate load"
