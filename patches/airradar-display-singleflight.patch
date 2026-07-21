@@ -1,0 +1,288 @@
+diff --git a/html/display/detection/delay-doppler/index.html b/html/display/detection/delay-doppler/index.html
+index 4c338ef..fca4eb6 100644
+--- a/html/display/detection/delay-doppler/index.html
++++ b/html/display/detection/delay-doppler/index.html
+@@ -28,5 +28,5 @@
+   yVariable = "doppler";
+ </script>
+ <script src="../../../js/common.js"></script>
+-<script src="../../../js/plot_detection.js?v=20260720-display-immediate-load"></script>
++<script src="../../../js/plot_detection.js?v=20260720-display-singleflight"></script>
+ </html>
+diff --git a/html/display/detection/delay/index.html b/html/display/detection/delay/index.html
+index 1f74673..440b3ea 100644
+--- a/html/display/detection/delay/index.html
++++ b/html/display/detection/delay/index.html
+@@ -28,5 +28,5 @@
+   yVariable = "delay";
+ </script>
+ <script src="../../../js/common.js"></script>
+-<script src="../../../js/plot_detection.js?v=20260720-display-immediate-load"></script>
++<script src="../../../js/plot_detection.js?v=20260720-display-singleflight"></script>
+ </html>
+diff --git a/html/display/detection/doppler/index.html b/html/display/detection/doppler/index.html
+index 2f725ed..92068ca 100644
+--- a/html/display/detection/doppler/index.html
++++ b/html/display/detection/doppler/index.html
+@@ -28,5 +28,5 @@
+   yVariable = "doppler";
+ </script>
+ <script src="../../../js/common.js"></script>
+-<script src="../../../js/plot_detection.js?v=20260720-display-immediate-load"></script>
++<script src="../../../js/plot_detection.js?v=20260720-display-singleflight"></script>
+ </html>
+diff --git a/html/display/map/index.html b/html/display/map/index.html
+index 2984478..78faa89 100644
+--- a/html/display/map/index.html
++++ b/html/display/map/index.html
+@@ -92,5 +92,5 @@
+ </script>
+ <script src="../../js/common.js"></script>
+ <script src="../../js/system_control.js?v=20260705-restart-exit"></script>
+-<script src="../../js/plot_map.js?v=20260720-display-immediate-load"></script>
++<script src="../../js/plot_map.js?v=20260720-display-singleflight"></script>
+ </html>
+diff --git a/html/display/maxhold/index.html b/html/display/maxhold/index.html
+index c960cf5..17a803f 100644
+--- a/html/display/maxhold/index.html
++++ b/html/display/maxhold/index.html
+@@ -92,5 +92,5 @@
+ </script>
+ <script src="../../js/common.js"></script>
+ <script src="../../js/system_control.js?v=20260705-restart-exit"></script>
+-<script src="../../js/plot_map.js?v=20260720-display-immediate-load"></script>
++<script src="../../js/plot_map.js?v=20260720-display-singleflight"></script>
+ </html>
+diff --git a/html/display/spectrum/index.html b/html/display/spectrum/index.html
+index 6db3810..59dae1f 100644
+--- a/html/display/spectrum/index.html
++++ b/html/display/spectrum/index.html
+@@ -24,6 +24,6 @@
+ <script>
+ </script>
+ <script src="../../js/common.js"></script>
+-<script src="../../js/plot_spectrum.js?v=20260720-display-immediate-load"></script>
++<script src="../../js/plot_spectrum.js?v=20260720-display-singleflight"></script>
+ 
+ </html>
+diff --git a/html/display/timing/index.html b/html/display/timing/index.html
+index 87df021..ecc8b91 100644
+--- a/html/display/timing/index.html
++++ b/html/display/timing/index.html
+@@ -26,5 +26,5 @@
+   yTitle = "Time (ms)";
+ </script>
+ <script src="../../js/common.js"></script>
+-<script src="../../js/plot_timing.js?v=20260720-display-immediate-load"></script>
++<script src="../../js/plot_timing.js?v=20260720-display-singleflight"></script>
+ </html>
+diff --git a/html/js/plot_detection.js b/html/js/plot_detection.js
+index 782ce18..9d0fa0b 100644
+--- a/html/js/plot_detection.js
++++ b/html/js/plot_detection.js
+@@ -7,6 +7,8 @@ var range_y = [];
+ var DISPLAY_POLL_MS = 1000;
+ var DISPLAY_TIMESTAMP_FALLBACK_MS = 3000;
+ var lastRefreshMs = 0;
++var displayRefreshInFlight = false;
++var timestampPollInFlight = false;
+ 
+ // setup API
+ var urlTimestamp;
+@@ -130,16 +132,27 @@ function drawDetection(data) {
+ }
+ 
+ function refreshDetectionPlot() {
++  if (displayRefreshInFlight) {
++    return;
++  }
++  displayRefreshInFlight = true;
+   lastRefreshMs = Date.now();
+   $.getJSON(urlDetection, function () { })
+     .done(function (data) {
+       drawDetection(data);
+     })
+     .fail(function () {
++    })
++    .always(function () {
++      displayRefreshInFlight = false;
+     });
+ }
+ 
+ function pollTimestampAndRefresh() {
++  if (timestampPollInFlight) {
++    return;
++  }
++  timestampPollInFlight = true;
+   $.get(urlTimestamp, function () { })
+     .done(function (data) {
+       if (timestamp != data) {
+@@ -151,6 +164,9 @@ function pollTimestampAndRefresh() {
+       if (Date.now() - lastRefreshMs >= DISPLAY_TIMESTAMP_FALLBACK_MS) {
+         refreshDetectionPlot();
+       }
++    })
++    .always(function () {
++      timestampPollInFlight = false;
+     });
+ }
+ 
+diff --git a/html/js/plot_map.js b/html/js/plot_map.js
+index 5155b0a..c871d3f 100644
+--- a/html/js/plot_map.js
++++ b/html/js/plot_map.js
+@@ -32,8 +32,10 @@ var DEFAULT_ADSB_ZERO_THRESHOLD_HZ = 1.0;
+ var DEFAULT_OVERLAY_MODE = 'detections';
+ var DEFAULT_OBJECT_PROFILE = 'optimized';
+ var IS_MAXHOLD_PAGE = window.location.pathname.indexOf('/display/maxhold') === 0;
+-var MAP_POLL_MS = IS_MAXHOLD_PAGE ? 1000 : 250;
+-var MAP_TIMESTAMP_FALLBACK_MS = IS_MAXHOLD_PAGE ? 3000 : 1000;
++var MAP_POLL_MS = 1000;
++var MAP_TIMESTAMP_FALLBACK_MS = 3000;
++var mapRefreshInFlight = false;
++var timestampPollInFlight = false;
+ var SCALE_LABELS = {
+   original: 'Original',
+   percentile: 'Percentile',
+@@ -947,6 +949,10 @@ function renderMapFrame(data) {
+ }
+ 
+ function refreshMapFrame() {
++  if (mapRefreshInFlight) {
++    return;
++  }
++  mapRefreshInFlight = true;
+   lastMapRefreshMs = Date.now();
+ 
+   // get detection data (no detection lag)
+@@ -980,10 +986,18 @@ function refreshMapFrame() {
+       renderMapFrame(data);
+     })
+     .fail(function () {
++    })
++    .always(function () {
++      mapRefreshInFlight = false;
+     });
+ }
+ 
+ function pollTimestampAndRefresh() {
++  if (timestampPollInFlight) {
++    return;
++  }
++  timestampPollInFlight = true;
++
+   // check if timestamp is updated
+   $.get(urlTimestamp, function () { })
+     .done(function (data) {
+@@ -996,6 +1010,9 @@ function pollTimestampAndRefresh() {
+       if (Date.now() - lastMapRefreshMs > MAP_TIMESTAMP_FALLBACK_MS) {
+         refreshMapFrame();
+       }
++    })
++    .always(function () {
++      timestampPollInFlight = false;
+     });
+ }
+ 
+diff --git a/html/js/plot_spectrum.js b/html/js/plot_spectrum.js
+index 13b1e22..6c6b0ee 100644
+--- a/html/js/plot_spectrum.js
++++ b/html/js/plot_spectrum.js
+@@ -7,6 +7,8 @@ var range_y = [];
+ var DISPLAY_POLL_MS = 1000;
+ var DISPLAY_TIMESTAMP_FALLBACK_MS = 3000;
+ var lastRefreshMs = 0;
++var displayRefreshInFlight = false;
++var timestampPollInFlight = false;
+ 
+ // setup API
+ var urlTimestamp;
+@@ -119,16 +121,27 @@ function drawSpectrum(data) {
+ }
+ 
+ function refreshSpectrumPlot() {
++  if (displayRefreshInFlight) {
++    return;
++  }
++  displayRefreshInFlight = true;
+   lastRefreshMs = Date.now();
+   $.getJSON(urlMap, function () { })
+     .done(function (data) {
+       drawSpectrum(data);
+     })
+     .fail(function () {
++    })
++    .always(function () {
++      displayRefreshInFlight = false;
+     });
+ }
+ 
+ function pollTimestampAndRefresh() {
++  if (timestampPollInFlight) {
++    return;
++  }
++  timestampPollInFlight = true;
+   $.get(urlTimestamp, function () { })
+     .done(function (data) {
+       if (timestamp != data) {
+@@ -140,6 +153,9 @@ function pollTimestampAndRefresh() {
+       if (Date.now() - lastRefreshMs >= DISPLAY_TIMESTAMP_FALLBACK_MS) {
+         refreshSpectrumPlot();
+       }
++    })
++    .always(function () {
++      timestampPollInFlight = false;
+     });
+ }
+ 
+diff --git a/html/js/plot_timing.js b/html/js/plot_timing.js
+index 6cb8e81..732b537 100644
+--- a/html/js/plot_timing.js
++++ b/html/js/plot_timing.js
+@@ -6,6 +6,8 @@ var isLocalHost = is_localhost(host);
+ var DISPLAY_POLL_MS = 1000;
+ var DISPLAY_TIMESTAMP_FALLBACK_MS = 3000;
+ var lastRefreshMs = 0;
++var displayRefreshInFlight = false;
++var timestampPollInFlight = false;
+ 
+ // setup API
+ var urlTimestamp;
+@@ -160,16 +162,27 @@ function drawTiming(data) {
+ }
+ 
+ function refreshTimingPlot() {
++  if (displayRefreshInFlight) {
++    return;
++  }
++  displayRefreshInFlight = true;
+   lastRefreshMs = Date.now();
+   $.getJSON(urlTiming, function () { })
+     .done(function (data) {
+       drawTiming(data);
+     })
+     .fail(function () {
++    })
++    .always(function () {
++      displayRefreshInFlight = false;
+     });
+ }
+ 
+ function pollTimestampAndRefresh() {
++  if (timestampPollInFlight) {
++    return;
++  }
++  timestampPollInFlight = true;
+   $.get(urlTimestamp, function () { })
+     .done(function (data) {
+       if (timestamp != data) {
+@@ -181,6 +194,9 @@ function pollTimestampAndRefresh() {
+       if (Date.now() - lastRefreshMs >= DISPLAY_TIMESTAMP_FALLBACK_MS) {
+         refreshTimingPlot();
+       }
++    })
++    .always(function () {
++      timestampPollInFlight = false;
+     });
+ }
+ 
