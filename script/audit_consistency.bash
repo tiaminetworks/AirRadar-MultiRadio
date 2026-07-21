@@ -82,22 +82,26 @@ fi
 
 check "Running web containers"
 if command -v docker >/dev/null 2>&1; then
-  for sensor in sensor1 sensor2 sensor3; do
-    container="airradar-mr-${sensor}-web"
-    if docker ps --format '{{.Names}}' | grep -qx "${container}"; then
-      echo "${container}: running"
-      if [[ -f src/airradar/html/lib/plotly-2.20.0.min.js ]]; then
-        source_hash="$(sha256sum src/airradar/html/lib/plotly-2.20.0.min.js | awk '{print $1}')"
-        container_hash="$(docker exec "${container}" sha256sum /usr/local/apache2/htdocs/lib/plotly-2.20.0.min.js 2>/dev/null | awk '{print $1}')"
-        echo "${container}: plotly ${container_hash}"
-        if [[ "${container_hash}" != "${source_hash}" ]]; then
-          mark_fail "${container}: Plotly hash does not match source"
+  if containers="$(docker ps --format '{{.Names}}' 2>/dev/null)"; then
+    for sensor in sensor1 sensor2 sensor3; do
+      container="airradar-mr-${sensor}-web"
+      if grep -qx "${container}" <<<"${containers}"; then
+        echo "${container}: running"
+        if [[ -f src/airradar/html/lib/plotly-2.20.0.min.js ]]; then
+          source_hash="$(sha256sum src/airradar/html/lib/plotly-2.20.0.min.js | awk '{print $1}')"
+          container_hash="$(docker exec "${container}" sha256sum /usr/local/apache2/htdocs/lib/plotly-2.20.0.min.js 2>/dev/null | awk '{print $1}')"
+          echo "${container}: plotly ${container_hash}"
+          if [[ "${container_hash}" != "${source_hash}" ]]; then
+            mark_fail "${container}: Plotly hash does not match source"
+          fi
         fi
+      else
+        warn "${container}: not running"
       fi
-    else
-      warn "${container}: not running"
-    fi
-  done
+    done
+  else
+    warn "docker is installed but not accessible; skipping container hash checks"
+  fi
 else
   warn "docker command is not available"
 fi
