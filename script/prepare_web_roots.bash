@@ -21,7 +21,10 @@ prepare_one() {
 
   # AirRadar's static UI assumes localhost:3000. Each multi-radio sensor has
   # its own API port, so patch the generated web roots without touching source.
-  find "${out}" -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) \
+  # Never rewrite vendor assets under lib/. Minified libraries can contain
+  # text that looks like a port or helper expression, and changing it can break
+  # every Plotly-based display page for one sensor.
+  find "${out}" -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' \) ! -path "${out}/lib/*" \
     -exec perl -0pi -e "s/:3000/:${api_port}/g" {} +
 
   # In the single-node AirRadar UI, local browser sessions call the API port
@@ -29,7 +32,7 @@ prepare_one() {
   # /stash/* to the matching sensor API. Keep browser traffic on the same web
   # origin so long-running pages survive browser refreshes, SSH forwards,
   # Cloudflare tunnels, and API-port exposure differences.
-  find "${out}" -type f \( -name '*.html' -o -name '*.js' \) \
+  find "${out}" -type f \( -name '*.html' -o -name '*.js' \) ! -path "${out}/lib/*" \
     -exec perl -0pi -e "s/window\\.location\\.hostname/window.location.host/g; s/global\\.location\\.hostname/global.location.host/g; s/var isLocalHost = is_localhost\\(host\\);/var isLocalHost = false;/g; s@return '//' \\+ host \\+ \\(isLocalHost \\? ':${api_port}' : ''\\) \\+ path;@return path;@g; s@return '//' \\+ host \\+ \\(isLocalHost\\(host\\) \\? ':${api_port}' : ''\\) \\+ path;@return path;@g; s@return 'http://' \\+ global\\.location\\.host \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ window\\.location\\.host \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ replayHost \\+ ':${api_port}' \\+ path;@return path;@g; s@return 'http://' \\+ trajectoryHost \\+ ':${api_port}' \\+ path;@return path;@g; s/:${api_port}//g" {} +
 
   # Some AirRadar pages define small API helper functions with slightly
@@ -49,6 +52,18 @@ ProxyPassReverse /stash/ http://host.docker.internal:${api_port}/stash/
 ProxyPass /maxhold/ http://host.docker.internal:${api_port}/maxhold/
 ProxyPassReverse /maxhold/ http://host.docker.internal:${api_port}/maxhold/
 EOF
+
+  if [[ -d "${AIRRADAR_SOURCE}/html/lib" ]]; then
+    while IFS= read -r -d '' source_file; do
+      local rel="${source_file#${AIRRADAR_SOURCE}/html/}"
+      local generated_file="${out}/${rel}"
+      if [[ ! -f "${generated_file}" ]] || ! cmp -s "${source_file}" "${generated_file}"; then
+        echo "Generated vendor asset changed unexpectedly: ${rel}" >&2
+        echo "Do not patch files under html/lib when preparing sensor web roots." >&2
+        exit 1
+      fi
+    done < <(find "${AIRRADAR_SOURCE}/html/lib" -type f -print0)
+  fi
 }
 
 prepare_one sensor1 3100
